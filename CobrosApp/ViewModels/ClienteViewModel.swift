@@ -86,4 +86,25 @@ class ClienteViewModel {
             return false
         }
     }
+    
+    // funcion para validar los campos obligatorios del formulario antes de enviarlos
+    func validarCliente(nombre: String, appaterno: String, telefono: String, direccion: String) -> Bool {
+        if nombre.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            self.errorMessage = "El nombre es obligatorio."
+            return false
+        }
+        if appaterno.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            self.errorMessage = "Se necesita al menos un apellido."
+            return false
+        }
+        if telefono.trimmingCharacters(in: .whitespacesAndNewlines).count != 10 {
+            self.errorMessage = "El teléfono debe tener 10 dígitos."
+            return false
+        }
+        if direccion.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            self.errorMessage = "La dirección de cobro es obligatoria."
+            return false
+        }
+        return true
+    }
 }

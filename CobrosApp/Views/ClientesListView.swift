@@ -53,12 +53,12 @@ struct ClientesListView: View {
             Text(viewModel.errorMessage ?? "")
         }
         .toolbar {
-            Button {
-                Task {
-                    await agregarClienteDePrueba()
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    CrearClienteView(viewModel: viewModel)
+                } label: {
+                    Image(systemName: "plus")
                 }
-            } label: {
-                Image(systemName: "plus")
             }
         }
         .task {
@@ -68,24 +68,6 @@ struct ClientesListView: View {
             await viewModel.fetchClientes()
         }
     }
-    
-    // Función rápida para probar que la inserción en Supabase funcione correctamente
-        private func agregarClienteDePrueba() async {
-            let dePrueba = Cliente(
-                id: nil, // Dejar nil para que Supabase autogenere el ID (Identity)
-                nombre: "Juan",
-                appaterno: "Pérez",
-                apmaterno: "López",
-                telefono: "5512345678",
-                direccion: "Av. Reforma 123, CDMX",
-                email: "juan.perez@email.com"
-            )
-            
-            let exito = await viewModel.crearCliente(dePrueba)
-            if exito {
-                print("¡Cliente de prueba guardado e interfaz actualizada!")
-            }
-        }
 }
 
 private struct HCenterRow: View {
