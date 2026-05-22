@@ -15,7 +15,7 @@ struct Prestamo: Identifiable, Codable {
     var fechaPrestamo: Date
     var frecuenciaPago: Int
     var interesPorciento: Double
-    var fechaTermino: Date
+    var fechaTermino: Date?
     var activo: Bool
     
     var cliente: ClienteAnidado?
@@ -52,7 +52,7 @@ struct Prestamo: Identifiable, Codable {
                 "fecha_prestamo": formatter.string(from: fechaPrestamo),
                 "frecuencia_pago": frecuenciaPago,
                 "interes_porciento": interesPorciento,
-                "fecha_termino": formatter.string(from: fechaTermino),
+                "fecha_termino": formatter.string(from: fechaTermino!),
                 "activo": activo
             ]
             

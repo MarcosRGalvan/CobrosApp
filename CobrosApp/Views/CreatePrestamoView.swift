@@ -21,14 +21,12 @@ struct CreatePrestamoView: View {
     @State private var cuotas: Int = 1
     @State private var fechaPrestamo: Date
     @State private var intereses: Double = 0.0
-    @State private var fechaTermino: Date
     
     
     // Inicializador de fecha para darles un valor por defecto
     init(viewModel: PrestamoViewModel) {
         self.viewModel = viewModel
         _fechaPrestamo = State(initialValue: Date())
-        _fechaTermino = State(initialValue: Date().addingTimeInterval(86400 * 30))
     }
     
     var body: some View {
@@ -77,9 +75,8 @@ struct CreatePrestamoView: View {
                 }
             }
             
-            Section(header: Text("Fechas del contrato")) {
+            Section(header: Text("Fecha del contrato")) {
                 DatePicker("Fecha de Inicio", selection: $fechaPrestamo, displayedComponents: .date)
-                DatePicker("Fecha de Término",selection: $fechaTermino, displayedComponents: .date)
             }
         }
         .navigationTitle("Nuevo Préstamo")
@@ -144,7 +141,7 @@ struct CreatePrestamoView: View {
             fechaPrestamo: fechaPrestamo,
             frecuenciaPago: idFrecuencia,
             interesPorciento: intereses,
-            fechaTermino: fechaTermino,
+            fechaTermino: nil,
             activo: true,
             cliente: nil
         )
