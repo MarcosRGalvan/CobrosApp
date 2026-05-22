@@ -127,7 +127,7 @@ private func destinationView(for destination: HomeDestination) -> some View {
     case .clientes:
         ClientesListView()
     case .prestamos:
-        EmptyView()
+        PrestamosListView()
     }
 }
 

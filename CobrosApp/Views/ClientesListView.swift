@@ -78,7 +78,7 @@ private struct HCenterRow: View {
         HStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.caption)
-                .foregroundStyle(.purple)
+                .foregroundStyle(.mint)
                 .frame(width: 16)
             Text(text)
                 .font(.subheadline)
