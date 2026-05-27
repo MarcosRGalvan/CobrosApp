@@ -79,7 +79,12 @@ struct ContentView: View {
                 case .clientes:
                     ClientesListView(path: $path)       // ← pasa el path
                 case .prestamos:
-                    PrestamosListView()
+                    PrestamosListView(path: $path)
+                case .crearPrestamo(let cliente):
+                    CreatePrestamoView(
+                        viewModel: PrestamoViewModel(),
+                        clientePreseleccionado: cliente
+                    )
                 }
             }
             .toolbar {

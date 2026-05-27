@@ -75,7 +75,10 @@ struct ClientesListView: View {
                 CreatePrestamoView(
                     viewModel: PrestamoViewModel(),
                     clientePreseleccionado: cliente
-                )
+                ) {
+                    path = NavigationPath()
+                    path.append(HomeDestination.prestamos)
+                }
             }
         }
         .task {

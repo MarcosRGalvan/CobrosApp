@@ -11,6 +11,7 @@ struct CreatePrestamoView: View {
     @Environment(\.dismiss) private var dismiss
     var viewModel: PrestamoViewModel
     var clientePreseleccionado: Cliente? = nil
+    var onGuardar: (() -> Void)? = nil
     
     @State private var clienteViewModel = ClienteViewModel()
     @State private var clienteSeleccionadoId: Int? = nil
@@ -25,9 +26,10 @@ struct CreatePrestamoView: View {
     
     
     // Inicializador de fecha para darles un valor por defecto
-    init(viewModel: PrestamoViewModel, clientePreseleccionado: Cliente? = nil) {
+    init(viewModel: PrestamoViewModel, clientePreseleccionado: Cliente? = nil, onGuardar: (() -> Void)? = nil) {
         self.viewModel = viewModel
         self.clientePreseleccionado = clientePreseleccionado
+        self.onGuardar = onGuardar
         _fechaPrestamo = State(initialValue: Date())
     }
     
@@ -155,7 +157,11 @@ struct CreatePrestamoView: View {
         let exito = await viewModel.crearPrestamo(nuevoPrestamo)
         
         if exito {
-            dismiss()
+            if let callback = onGuardar {
+                callback()
+            } else {
+                dismiss()
+            }
         }
     }
 }
