@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum HomeDestination {
+enum HomeDestination: Hashable {
     case clientes
     case prestamos
 }

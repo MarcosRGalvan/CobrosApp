@@ -10,6 +10,7 @@ import SwiftUI
 struct CrearClienteView: View {
     @Environment(\.dismiss) private var dismiss
     var viewModel: ClienteViewModel
+    var onCreate: ((Cliente) -> Void)? = nil
     
     @State private var nombre: String = ""
     @State private var appaterno: String = ""
@@ -87,10 +88,12 @@ struct CrearClienteView: View {
             email: email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : email
         )
         
-        let guardadoExitoso = await viewModel.crearCliente(nuevoCliente)
-        
-        if guardadoExitoso {
-            dismiss()
+        if let clienteCreado = await viewModel.crearCliente(nuevoCliente) {
+            if let callback = onCreate {
+                callback(clienteCreado)
+            } else {
+                dismiss()
+            }
         }
     }
 }

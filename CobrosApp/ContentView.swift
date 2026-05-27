@@ -16,6 +16,7 @@ struct HomeItem: Identifiable {
 
 struct ContentView: View {
     @State private var isPresentingAboutView = false
+    @State private var path = NavigationPath()          // ← NUEVO
     
     private let items: [HomeItem] = [
         HomeItem(icon: "person.fill", title: "Clientes", destination: .clientes),
@@ -34,7 +35,7 @@ struct ContentView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {                  // ← path aquí
             ZStack(alignment: .top) {
                 LinearGradient(
                     gradient: Gradient(colors: [Color.blue.opacity(0.9), Color.clear]),
@@ -62,20 +63,25 @@ struct ContentView: View {
                             
                             LazyVGrid(columns: columns, spacing: 12) {
                                 ForEach(items) { item in
-                                    NavigationLink {
-                                        destinationView(for: item.destination)
-                                    } label: {
+                                    NavigationLink(value: item.destination) {  // ← value en vez de destination
                                         Tile(icon: item.icon, title: item.title)
                                     }
                                 }
                             }
-                            
                         }
                         .padding()
                     }
                 }
             }
             .navigationTitle("Hola, Bienvenido")
+            .navigationDestination(for: HomeDestination.self) { destination in  // ← NUEVO
+                switch destination {
+                case .clientes:
+                    ClientesListView(path: $path)       // ← pasa el path
+                case .prestamos:
+                    PrestamosListView()
+                }
+            }
             .toolbar {
                 Button(action: {
                     isPresentingAboutView = true
@@ -118,16 +124,6 @@ private struct Tile: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
         )
-    }
-}
-
-@ViewBuilder
-private func destinationView(for destination: HomeDestination) -> some View {
-    switch destination {
-    case .clientes:
-        ClientesListView()
-    case .prestamos:
-        PrestamosListView()
     }
 }
 

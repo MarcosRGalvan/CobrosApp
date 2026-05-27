@@ -62,28 +62,29 @@ class ClienteViewModel {
     
     
     // Insertar un nuevo cliente
-    func crearCliente(_ cliente: Cliente) async -> Bool {
+    func crearCliente(_ cliente: Cliente) async -> Cliente? {
         await MainActor.run {
             self.isLoading = true
             self.errorMessage = nil
         }
         
         do {
-            try await SupabaseManager.shared.client
+            let clienteCreado: [Cliente] = try await SupabaseManager.shared.client
                 .from("clientes")
                 .insert(cliente)
+                .select()
                 .execute()
+                .value
             
-            // si se guardo actualizamos la lista
             await fetchClientes()
-            return true
+            return clienteCreado.first
             
         } catch {
             await MainActor.run {
                 self.errorMessage = "Error al registrar cliente: \(error.localizedDescription)"
                 self.isLoading = false
             }
-            return false
+            return nil
         }
     }
     

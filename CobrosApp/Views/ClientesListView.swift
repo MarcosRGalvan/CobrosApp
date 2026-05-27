@@ -7,7 +7,13 @@
 
 import SwiftUI
 
+enum ClienteDestino: Hashable {
+    case crearCliente
+    case crearPrestamo(Cliente)
+}
+
 struct ClientesListView: View {
+    @Binding var path: NavigationPath              // ← recibe el path del padre
     @State private var viewModel = ClienteViewModel()
     
     var body: some View {
@@ -21,7 +27,7 @@ struct ClientesListView: View {
             } else {
                 ForEach(viewModel.clientesFiltrados) { cliente in
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("\(cliente.nombre) \(cliente.appaterno) \(cliente.apmaterno ?? "")")
+                        Text(nombreCompleto(cliente))
                             .font(.headline)
                             .foregroundStyle(.primary)
                         
@@ -43,22 +49,33 @@ struct ClientesListView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
             }
         }
-        .alert("Error", isPresented: Binding(
-            get: { viewModel.errorMessage != nil },
-            set: { _ in viewModel.errorMessage = nil }
-        )) {
+        .alert("Error", isPresented: mostrarError) {
             Button("OK", role: .cancel) { }
-            
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink {
-                    CrearClienteView(viewModel: viewModel)
+                Button {
+                    path.append(ClienteDestino.crearCliente)
                 } label: {
                     Image(systemName: "plus")
                 }
+            }
+        }
+        .navigationDestination(for: ClienteDestino.self) { destino in
+            switch destino {
+            case .crearCliente:
+                CrearClienteView(viewModel: viewModel) { clienteCreado in
+                    Task { @MainActor in
+                        path.append(ClienteDestino.crearPrestamo(clienteCreado))
+                    }
+                }
+            case .crearPrestamo(let cliente):
+                CreatePrestamoView(
+                    viewModel: PrestamoViewModel(),
+                    clientePreseleccionado: cliente
+                )
             }
         }
         .task {
@@ -67,6 +84,19 @@ struct ClientesListView: View {
         .refreshable {
             await viewModel.fetchClientes()
         }
+    }
+    
+    private var mostrarError: Binding<Bool> {
+        Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { _ in viewModel.errorMessage = nil }
+        )
+    }
+    
+    private func nombreCompleto(_ cliente: Cliente) -> String {
+        [cliente.nombre, cliente.appaterno, cliente.apmaterno]
+            .compactMap { $0 }
+            .joined(separator: " ")
     }
 }
 
@@ -89,6 +119,6 @@ private struct HCenterRow: View {
 
 #Preview {
     NavigationStack {
-        ClientesListView()
+        ClientesListView(path: .constant(NavigationPath()))  // ← preview con binding constante
     }
 }

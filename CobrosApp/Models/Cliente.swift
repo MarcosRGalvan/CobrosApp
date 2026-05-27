@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Cliente: Identifiable, Codable {
+struct Cliente: Identifiable, Codable, Hashable {
     var id: Int?
     var nombre: String
     var appaterno: String

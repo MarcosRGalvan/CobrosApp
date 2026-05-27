@@ -10,6 +10,7 @@ import SwiftUI
 struct CreatePrestamoView: View {
     @Environment(\.dismiss) private var dismiss
     var viewModel: PrestamoViewModel
+    var clientePreseleccionado: Cliente? = nil
     
     @State private var clienteViewModel = ClienteViewModel()
     @State private var clienteSeleccionadoId: Int? = nil
@@ -24,8 +25,9 @@ struct CreatePrestamoView: View {
     
     
     // Inicializador de fecha para darles un valor por defecto
-    init(viewModel: PrestamoViewModel) {
+    init(viewModel: PrestamoViewModel, clientePreseleccionado: Cliente? = nil) {
         self.viewModel = viewModel
+        self.clientePreseleccionado = clientePreseleccionado
         _fechaPrestamo = State(initialValue: Date())
     }
     
@@ -102,8 +104,12 @@ struct CreatePrestamoView: View {
             await frecuenciaViewModel.fetchFrecuenciasPago()
             
             await MainActor.run {
-                if frecuenciaSeleccionadaId == nil {
-                    frecuenciaSeleccionadaId = frecuenciaViewModel.frecuencias.first?.id
+                frecuenciaSeleccionadaId = frecuenciaViewModel.frecuencias.first?.id
+                
+                if let preseleccionado = clientePreseleccionado {
+                    clienteSeleccionadoId = preseleccionado.id
+                } else {
+                    clienteSeleccionadoId = clienteViewModel.clientes.first?.id
                 }
             }
         }
