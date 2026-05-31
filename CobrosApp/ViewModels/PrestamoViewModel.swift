@@ -22,11 +22,6 @@ class PrestamoViewModel {
         self.errorMessage = nil
 
         do {
-            let decoder = JSONDecoder()
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            decoder.dateDecodingStrategy = .formatted(formatter)
-
             let response = try await SupabaseManager.shared.client
                 .from("prestamos")
                 .select(
@@ -43,50 +38,57 @@ class PrestamoViewModel {
                 .order("fecha_prestamo", ascending: false)
                 .execute()
 
-            let fetchPrestamos = try decoder.decode(
-                [Prestamo].self,
-                from: response.data
-            )
-
-            self.prestamos = fetchPrestamos
+            self.prestamos = try Prestamo.decoder.decode([Prestamo].self, from: response.data)
             self.isLoading = false
+
         } catch is CancellationError {
-            // ← ignora cancelaciones silenciosamente
             self.isLoading = false
         } catch {
             print("❌ Error detallado de Supabase (Préstamos): \(error)")
-
-            self.errorMessage =
-                "Error al cargar la lista de préstamos: \(error.localizedDescription)"
+            self.errorMessage = "Error al cargar la lista de préstamos: \(error.localizedDescription)"
             self.isLoading = false
         }
     }
 
-    func crearPrestamo(_ prestamo: Prestamo) async -> Bool {
+    func crearPrestamo(_ prestamo: Prestamo, frecuencia: FrecuenciaPag) async -> Bool {
         await MainActor.run {
             self.isLoading = true
             self.errorMessage = nil
         }
 
         do {
-            try await SupabaseManager.shared.client
+            let response = try await SupabaseManager.shared.client
                 .from("prestamos")
                 .insert(prestamo)
+                .select()
+                .single()
                 .execute()
+
+            let prestamoCreado = try Prestamo.decoder.decode(Prestamo.self, from: response.data)
+
+            guard let prestamoId = prestamoCreado.id else {
+                self.errorMessage = "No se pudo obtener el ID del préstamo creado."
+                self.isLoading = false
+                return false
+            }
+
+            try await PagoService().generarCuotas(
+                prestamoId: prestamoId,
+                prestamo: prestamo,
+                frecuencia: frecuencia
+            )
 
             return true
 
         } catch {
             await MainActor.run {
-                self.errorMessage =
-                    "Error al crear el prestamo \( error.localizedDescription)"
+                self.errorMessage = "Error al crear el prestamo \(error.localizedDescription)"
                 self.isLoading = false
             }
             return false
         }
     }
 
-    // Validamos los campos del formulario antes de insertar
     func validarPrestamo(
         clienteId: Int?,
         monto: Double,
@@ -106,8 +108,7 @@ class PrestamoViewModel {
             return false
         }
         if intereses < 0 {
-            self.errorMessage =
-                "El porcentaje de interés no puede ser un número negativo."
+            self.errorMessage = "El porcentaje de interés no puede ser un número negativo."
             return false
         }
 

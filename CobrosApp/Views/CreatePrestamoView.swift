@@ -41,9 +41,11 @@ struct CreatePrestamoView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 } else {
-                    Picker("Seleccionar Cliente", selection: $clienteSeleccionadoId) {
+                    Picker("Clientes", selection: $clienteSeleccionadoId) {
+                        Text("Selecciona un cliente")
+                            .tag(nil as Int?)
                         ForEach(clienteViewModel.clientes) { cliente in
-                            Text("\(cliente.nombre) \(cliente.appaterno)").tag(cliente.id)
+                            Text("\(cliente.nombre) \(cliente.appaterno)").tag(cliente.id as Int?)
                         }
                     }
                 }
@@ -63,9 +65,11 @@ struct CreatePrestamoView: View {
                 if frecuenciaViewModel.frecuencias.isEmpty {
                     ProgressView("Cargando frecuencias...")
                 } else {
-                    Picker("Frecuencias de cobro", selection: $frecuenciaSeleccionadaId) {
+                    Picker("Frecuencia de cobro", selection: $frecuenciaSeleccionadaId) {
+                        Text("Selecciona una frecuencia")
+                            .tag(nil as Int?)
                         ForEach(frecuenciaViewModel.frecuencias) { freq in
-                            Text(freq.nombre).tag(freq.id)
+                            Text(freq.nombre).tag(freq.id as Int?)
                         }
                     }
                 }
@@ -105,13 +109,9 @@ struct CreatePrestamoView: View {
             await clienteViewModel.fetchClientes()
             await frecuenciaViewModel.fetchFrecuenciasPago()
             
-            await MainActor.run {
-                frecuenciaSeleccionadaId = frecuenciaViewModel.frecuencias.first?.id
-                
-                if let preseleccionado = clientePreseleccionado {
+            if let preseleccionado = clientePreseleccionado {
+                await MainActor.run {
                     clienteSeleccionadoId = preseleccionado.id
-                } else {
-                    clienteSeleccionadoId = clienteViewModel.clientes.first?.id
                 }
             }
         }
@@ -127,7 +127,9 @@ struct CreatePrestamoView: View {
     
     private func guardarNuevoPrestamo() async {
         guard let idCliente = clienteSeleccionadoId,
-              let idFrecuencia = frecuenciaSeleccionadaId else {
+              let idFrecuencia = frecuenciaSeleccionadaId,
+              let frecuencia = frecuenciaViewModel.frecuencias.first(where: { $0.id == idFrecuencia })
+        else {
             viewModel.errorMessage = "Por favor selecciona un cliente y una frecuencia."
             return
         }
@@ -154,7 +156,7 @@ struct CreatePrestamoView: View {
             cliente: nil
         )
         
-        let exito = await viewModel.crearPrestamo(nuevoPrestamo)
+        let exito = await viewModel.crearPrestamo(nuevoPrestamo, frecuencia: frecuencia)
         
         if exito {
             if let callback = onGuardar {

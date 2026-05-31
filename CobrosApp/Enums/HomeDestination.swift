@@ -10,5 +10,7 @@ import Foundation
 enum HomeDestination: Hashable {
     case clientes
     case prestamos
+    case pagos
+    case rutaDelDia
     case crearPrestamo(Cliente?)
 }

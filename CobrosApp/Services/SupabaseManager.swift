@@ -10,13 +10,15 @@ import Supabase
 
 class SupabaseManager {
     static let shared = SupabaseManager()
+    private init() {}
     
-    let client: SupabaseClient
-    
-    private init() {
-        let url = URL(string: "https://yzjxmtemhlliyrisxgce.supabase.co")!
-        let anonKey = "sb_publishable_gIVRzGOyzFQ9cv1iaYKhtg_XMPF9ZOr"
-        
-        self.client = SupabaseClient(supabaseURL: url, supabaseKey: anonKey)
-    }
+    let client = SupabaseClient(
+        supabaseURL: URL(string: "https://yzjxmtemhlliyrisxgce.supabase.co")!,
+        supabaseKey: "sb_publishable_gIVRzGOyzFQ9cv1iaYKhtg_XMPF9ZOr",
+        options: SupabaseClientOptions(
+            auth: SupabaseClientOptions.AuthOptions(
+                emitLocalSessionAsInitialSession: true
+            )
+        )
+    )
 }

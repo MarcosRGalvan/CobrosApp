@@ -19,8 +19,10 @@ struct ContentView: View {
     @State private var path = NavigationPath()          // ← NUEVO
     
     private let items: [HomeItem] = [
+        HomeItem(icon: "road.lanes.curved.right", title: "Ruta del Dia", destination: .rutaDelDia),
         HomeItem(icon: "person.fill", title: "Clientes", destination: .clientes),
-        HomeItem(icon: "dollarsign", title: "Prestamos", destination: .prestamos)
+        HomeItem(icon: "dollarsign", title: "Prestamos", destination: .prestamos),
+        HomeItem(icon: "banknote.fill", title: "Hitorial de Pagos", destination: .pagos)
     ]
     
     private let columns: [GridItem] = [
@@ -77,7 +79,7 @@ struct ContentView: View {
             .navigationDestination(for: HomeDestination.self) { destination in  // ← NUEVO
                 switch destination {
                 case .clientes:
-                    ClientesListView(path: $path)       // ← pasa el path
+                    ClientesListView(path: $path)
                 case .prestamos:
                     PrestamosListView(path: $path)
                 case .crearPrestamo(let cliente):
@@ -85,6 +87,10 @@ struct ContentView: View {
                         viewModel: PrestamoViewModel(),
                         clientePreseleccionado: cliente
                     )
+                case .pagos:
+                    EmptyView()
+                case .rutaDelDia:
+                    CobrosDiariosView()
                 }
             }
             .toolbar {

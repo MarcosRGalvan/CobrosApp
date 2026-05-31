@@ -65,8 +65,20 @@ struct Prestamo: Identifiable, Codable {
     
 }
 
+
 struct ClienteAnidado: Codable {
     var nombre: String
     var appaterno: String
     var apmaterno: String?
+}
+
+
+extension Prestamo {
+    static var decoder: JSONDecoder {
+        let decoder = JSONDecoder()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        decoder.dateDecodingStrategy = .formatted(formatter)
+        return decoder
+    }
 }
