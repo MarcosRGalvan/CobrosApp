@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Pago: Identifiable, Codable {
+struct Pago: Identifiable, Codable, Hashable {
     let id: Int?
     let prestamoId: Int
     let fechaPago: Date?
@@ -46,7 +46,7 @@ struct Pago: Identifiable, Codable {
     }
 }
 
-struct PrestamoAnidado: Codable {
+struct PrestamoAnidado: Codable, Hashable {
     let prestamoId: Int
     let clientes: ClienteAnidado?
 

@@ -32,22 +32,4 @@ class CobrosDiariosViewModel {
             }
         }
     }
-    
-    func marcarComoPagado(pago: Pago, formaPagoId: Int? = nil) async {
-        guard let id = pago.id else { return }
-        do {
-            try await service.registrarPago(
-                pagoId: id,
-                monto: pago.montoPagado,
-                formaPagoId: formaPagoId
-            )
-            await MainActor.run {
-                cobros.removeAll { $0.id == id }
-            }
-        } catch {
-            await MainActor.run {
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
 }

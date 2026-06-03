@@ -69,7 +69,7 @@ struct PrestamoRowView: View {
 
     private var uiDateFormatter: DateFormatter {
         let formatter = DateFormatter()
-        formatter.dateFormat = "dd-MM-yyyy"
+        formatter.dateFormat = "dd/MM/yyyy"
         return formatter
     }
 

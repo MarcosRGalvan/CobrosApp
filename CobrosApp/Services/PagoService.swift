@@ -93,7 +93,6 @@ class PagoService {
             )
             .gte("fecha_vencimiento", value: desde)
             .lt("fecha_vencimiento", value: hasta)
-            .is("fecha_pago", value: nil)
             .execute()
 
         print(
@@ -110,27 +109,6 @@ class PagoService {
             print("❌ Error de decode: \(error)")
             throw error
         }
-    }
-
-    // Marcar un pago como cobrado
-    func registrarPago(pagoId: Int, monto: Double, formaPagoId: Int?)
-        async throws
-    {
-        struct PagoUpdate: Encodable {
-            let fecha_pago: String
-            let monto_pagado: Double
-        }
-
-        let update = PagoUpdate(
-            fecha_pago: ISO8601DateFormatter().string(from: Date()),
-            monto_pagado: monto
-        )
-
-        try await supabase
-            .from("pagos")
-            .update(update)
-            .eq("id", value: pagoId)
-            .execute()
     }
 }
 

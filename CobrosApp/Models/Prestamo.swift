@@ -66,7 +66,7 @@ struct Prestamo: Identifiable, Codable {
 }
 
 
-struct ClienteAnidado: Codable {
+struct ClienteAnidado: Codable, Hashable {
     var nombre: String
     var appaterno: String
     var apmaterno: String?
