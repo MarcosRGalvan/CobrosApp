@@ -17,12 +17,17 @@ class PagoService {
         prestamo: Prestamo,
         frecuencia: FrecuenciaPag
     ) async throws {
+        print("diasIntervalo recibido: \(frecuencia.diasIntervalo)")
+        print("fechaPrestamo: \(prestamo.fechaPrestamo)")
+        
         guard frecuencia.diasIntervalo > 0, prestamo.cuotas > 0 else { return }
-
+        
+        let calendar = Calendar.current
+        let fechaBase = calendar.startOfDay(for: prestamo.fechaPrestamo)
+        
         let montoPorCuota = ((prestamo.montoPrestado * (1 + prestamo.interesPorciento / 100)) / Double(prestamo.cuotas))
             .rounded(toPlaces: 2)
         
-        let calendar = Calendar.current
         var pagos: [Pago] = []
 
         for i in 1...prestamo.cuotas {
@@ -30,7 +35,7 @@ class PagoService {
                 let fechaVence = calendar.date(
                     byAdding: .day,
                     value: frecuencia.diasIntervalo * i,
-                    to: prestamo.fechaPrestamo
+                    to: fechaBase
                 )
             else { continue }
 
@@ -47,7 +52,7 @@ class PagoService {
                     fechaVencimiento: fechaVence,
                     referenciaPago: nil,
                     formaPagoId: nil,
-                    activo: true,
+                    vencido: false,
                     prestamos: nil
                 )
             )

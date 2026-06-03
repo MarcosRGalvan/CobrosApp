@@ -143,12 +143,14 @@ struct CreatePrestamoView: View {
         
         guard esValido else { return }
         
+        let fechaLocal = Calendar.current.startOfDay(for: fechaPrestamo)
+        
         let nuevoPrestamo = Prestamo(
             id: nil,
             clienteId: idCliente,
             montoPrestado: montoPrestado,
             cuotas: cuotas,
-            fechaPrestamo: fechaPrestamo,
+            fechaPrestamo: fechaLocal,
             frecuenciaPago: idFrecuencia,
             interesPorciento: intereses,
             fechaTermino: nil,

@@ -19,7 +19,7 @@ struct Pago: Identifiable, Codable {
     let fechaVencimiento: Date?
     let referenciaPago: String?
     let formaPagoId: Int?
-    let activo: Bool
+    let vencido: Bool
     let prestamos: PrestamoAnidado?
 
     enum CodingKeys: String, CodingKey {
@@ -34,7 +34,7 @@ struct Pago: Identifiable, Codable {
         case fechaVencimiento = "fecha_vencimiento"
         case referenciaPago = "referencia_pago"
         case formaPagoId = "forma_pago_id"
-        case activo
+        case vencido
         case prestamos = "prestamos"
     }
 
