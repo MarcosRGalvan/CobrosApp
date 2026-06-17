@@ -86,7 +86,10 @@ class PagoService {
                                 clientes (
                                     nombre,
                                     appaterno,
-                                    apmaterno
+                                    apmaterno,
+                                    telefono,
+                                    direccion,
+                                    email
                                 )
                             )
                 """

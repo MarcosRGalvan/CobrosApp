@@ -70,6 +70,9 @@ struct ClienteAnidado: Codable, Hashable {
     var nombre: String
     var appaterno: String
     var apmaterno: String?
+    var telefono: String?
+    var direccion: String?
+    var email: String?
 }
 
 

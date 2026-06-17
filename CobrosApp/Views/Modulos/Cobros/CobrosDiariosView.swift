@@ -41,7 +41,7 @@ struct CobrosDiariosView: View {
                     }
                 }
                 .navigationDestination(item: $pagoSeleccionado) { pago in
-                    DetallePagoView()
+                    DetallePagoView(pago: pago, cliente: pago.prestamos?.clientes)
                 }
             }
         }
@@ -73,11 +73,11 @@ struct CobrosDiariosView: View {
 
 struct CobroDiarioRow: View {
     let pago: Pago
-    
+
     private var yaCobrado: Bool {
         pago.fechaPago != nil
     }
-    
+
     private var uiDateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd/MM/yyyy"
@@ -85,64 +85,60 @@ struct CobroDiarioRow: View {
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            HStack(spacing: 0) {
-                HStack(alignment: .center, spacing: 12) {
-                    Image(systemName: "dollarsign.circle.fill")
-                        .font(.title)
-                        .foregroundStyle(.yellow)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(pago.nombreCliente)
-                            .font(.title3)
-                            .bold()
-                        if let cuota = pago.numeroCuota {
-                            Text("Pago:\(cuota)")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                        if let fecha = pago.fechaVencimiento {
-                            Text("Fecha vence: \(fecha, formatter: uiDateFormatter)")
-                                .font(.subheadline)
-                                .bold()
-                                .foregroundStyle(.orange)
-                        }
-                        
-                        Spacer()
-                        
-                        Text("Total pago: \(pago.montoPagado, format: .currency(code: "MXN"))")
-                            .font(.body)
-                            .bold()
-                            .foregroundStyle(.green)
+        HStack(spacing: 0) {
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: "dollarsign.circle.fill")
+                    .font(.title)
+                    .foregroundStyle(.yellow)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(pago.nombreCliente)
+                        .font(.title3)
+                        .bold()
+                    if let cuota = pago.numeroCuota {
+                        Text("Pago:\(cuota)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
-                }
-                .padding(.vertical, 4)
-                .padding(.leading, 15)
-                .frame(width: geometry.size.width * 0.70, alignment: .leading)
-                
-                Divider()
-                
-                VStack(spacing: 4) {
-                    if yaCobrado {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.white)
-                            .font(.title3)
-                        Text("Pagado")
-                            .font(.caption)
+                    if let fecha = pago.fechaVencimiento {
+                        Text("Fecha vence: \(fecha, formatter: uiDateFormatter)")
+                            .font(.subheadline)
                             .bold()
-                            .foregroundStyle(.white)
-                    } else {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.white)
-                            .font(.title3)
-                        Text("Sin pago")
-                            .font(.caption)
-                            .bold()
-                            .foregroundStyle(.white)
+                            .foregroundStyle(.orange)
                     }
+                    Text("Total pago: \(pago.montoPagado, format: .currency(code: "MXN"))")
+                        .font(.body)
+                        .bold()
+                        .foregroundStyle(.green)
                 }
-                .frame(width: geometry.size.width * 0.33, height: geometry.size.height * 1, alignment: .center)
-                .background(yaCobrado ? Color.green : Color.red)
             }
+            .padding(.vertical, 4)
+            .padding(.leading, 15)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Divider()
+
+            VStack(spacing: 4) {
+                if yaCobrado {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.white)
+                        .font(.title3)
+                    Text("Pagado")
+                        .font(.caption)
+                        .bold()
+                        .foregroundStyle(.white)
+                } else {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.white)
+                        .font(.title3)
+                    Text("Sin pago")
+                        .font(.caption)
+                        .bold()
+                        .foregroundStyle(.white)
+                }
+            }
+            .frame(width: 90)
+            .frame(maxHeight: .infinity)
+            .background(yaCobrado ? Color.green : Color.red)
         }
         .frame(height: 110)
     }
