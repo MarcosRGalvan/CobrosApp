@@ -10,6 +10,10 @@ import SwiftUI
 struct DetallePagoView: View {
     let pago: Pago
     let cliente: ClienteAnidado?
+    
+    @State private var fp = FormasPagoViewModel()
+    @State private var formaPagoSeleccionadaId: Int?
+    @State private var montoIngresado: String = ""
 
     
     var body: some View {
@@ -57,39 +61,93 @@ struct DetallePagoView: View {
             }
             
             Section(header: Text("Detalles del Pago")) {
-                VStack(alignment: .leading, spacing: 12) {
-                    if let numPago = pago.numeroCuota {
-                        Label {
-                            Text("Pago número: \(numPago)")
-                        } icon: {
-                            Image(systemName: "number.square.fill")
-                                .foregroundStyle(.cyan)
-                        }
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    }
-                    
+                if let numPago = pago.numeroCuota {
                     Label {
-                        Text("Número de Prestamo: \(pago.prestamoId)")
+                        Text("Pago número: \(numPago)")
                     } icon: {
-                        Image(systemName: "numbers.rectangle.fill")
+                        Image(systemName: "number.square.fill")
                             .foregroundStyle(.cyan)
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                }
+                
+                Label {
+                    Text("Número de Prestamo: \(pago.prestamoId)")
+                } icon: {
+                    Image(systemName: "numbers.rectangle.fill")
+                        .foregroundStyle(.cyan)
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
                     
-                    Label {
-                        Text("Total Pago: \(pago.montoPagado, format: .currency(code: "MXN"))")
-                    } icon: {
-                        Image(systemName: "dollarsign.circle.fill")
-                            .foregroundStyle(.yellow)
+                Label {
+                    Text("Total Pago: \(pago.montoPagado, format: .currency(code: "MXN"))")
+                } icon: {
+                    Image(systemName: "dollarsign.circle.fill")
+                        .foregroundStyle(.yellow)
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                    
+                if fp.isLoading {
+                    ProgressView("Cargando formas de pago...")
+                } else {
+                    HStack {
+                        Label("", systemImage: "creditcard.fill")
+                        Picker("Forma de Pago", selection: $formaPagoSeleccionadaId) {
+                            Text("Selecciona").tag(Int?.none)
+                            ForEach(fp.formasPago.filter { $0.activo }) { forma in
+                                Text(forma.descripcion).tag(forma.id)
+                            }
+                        }
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 }
+                    
+                VStack(spacing: 16) {
+                    TextField("$0.00", text: $montoIngresado)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.center)
+                        .font(.title)
+                        .bold()
+                        
+                    Button {
+                            
+                    } label: {
+                        Text("Registrar Pago")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    
+                    HStack {
+                        Button {
+                            
+                        } label: {
+                            Text("Historial de pagos")
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.green)
+                        
+                        Button {
+                            
+                        } label: {
+                            Text("Cliente no pago")
+                                .foregroundStyle(.red)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.red)
+                    }
+                }
             }
         }
         .navigationTitle("Detalle del Pago")
+        .task {
+            await fp.fetchFormasPago()
+            formaPagoSeleccionadaId = pago.formaPagoId
+        }
     }
 }
 

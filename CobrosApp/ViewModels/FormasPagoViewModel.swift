@@ -1,43 +1,44 @@
 //
-//  FrecPagoViewModel.swift
+//  FormasPagoViewModel.swift
 //  CobrosApp
 //
-//  Created by Marco Ramirez on 22/05/26.
+//  Created by Marco Ramirez on 17/06/26.
 //
 
 import Foundation
 import Supabase
 
 @Observable
-class FrecPagoViewModel {
-    var frecuencias: [FrecuenciaPag] = []
+class FormasPagoViewModel {
+    var formasPago: [FormaPago] = []
     
     var isLoading: Bool = false
     var errorMessage: String? = nil
     
-    func fetchFrecuenciasPago() async {
+    func fetchFormasPago() async {
         await MainActor.run {
             self.isLoading = true
             self.errorMessage = nil
         }
         
         do {
-            let fetchFrecuenciasPago: [FrecuenciaPag] = try await SupabaseManager.shared.client
-                .from("frecuencias_pago")
+            let fetchFormasPago: [FormaPago] = try await
+            SupabaseManager.shared.client
+                .from("formas_pago")
                 .select()
                 .execute()
                 .value
             
             await MainActor.run {
-                self.frecuencias = fetchFrecuenciasPago
+                self.formasPago = fetchFormasPago
                 self.isLoading = false
             }
         } catch {
-            print("❌ Error detallado de Supabase: \(error)")
+            print("❌ error detallado de Supabase: \(error)")
             print(String(describing: error))
             
             await MainActor.run {
-                self.errorMessage = "No se pudieron cargar las frecuencias de pago: \(error.localizedDescription)"
+                self.errorMessage = "No se pudieron cargar las formas de pago: \(error.localizedDescription)"
                 self.isLoading = false
             }
         }
