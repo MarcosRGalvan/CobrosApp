@@ -8,6 +8,24 @@
 import Foundation
 import Supabase
 
+struct ActualizarPago: Encodable {
+    let fechaPago: String
+    let montoPagado: Double
+    let formaPagoId: Int?
+    let abonoCapital: Double
+    let pagoIntereses: Double
+    let recargos: Double
+    
+    enum CodingKeys: String, CodingKey {
+        case fechaPago = "fecha_pago"
+        case montoPagado = "monto_pagado"
+        case formaPagoId = "forma_pago_id"
+        case abonoCapital = "abono_capital"
+        case pagoIntereses = "pago_intereses"
+        case recargos
+    }
+}
+
 class PagoService {
     private let supabase = SupabaseManager.shared.client
 
@@ -52,7 +70,6 @@ class PagoService {
                     fechaVencimiento: fechaVence,
                     referenciaPago: nil,
                     formaPagoId: nil,
-                    vencido: false,
                     prestamos: nil
                 )
             )
@@ -78,22 +95,23 @@ class PagoService {
         let response =
             try await supabase
             .from("pagos")
-            .select(
-                """
+            .select("""
                 *,
-                            prestamos (
-                                prestamo_id,
-                                clientes (
-                                    nombre,
-                                    appaterno,
-                                    apmaterno,
-                                    telefono,
-                                    direccion,
-                                    email
-                                )
-                            )
-                """
-            )
+                prestamos (
+                    prestamo_id,
+                    monto_prestado,
+                    cuotas,
+                    interes_porciento,
+                    clientes (
+                        nombre,
+                        appaterno,
+                        apmaterno,
+                        telefono,
+                        direccion,
+                        email
+                        )
+                    )
+            """)
             .gte("fecha_vencimiento", value: desde)
             .lt("fecha_vencimiento", value: hasta)
             .execute()
@@ -112,6 +130,32 @@ class PagoService {
             print("❌ Error de decode: \(error)")
             throw error
         }
+    }
+    
+    // Marca un pago como cobrado: registra fecha, monto y forma de pago
+    func registrarPago(
+        pagoId: Int,
+        monto: Double,
+        formaPagoId: Int?,
+        abonoCapital: Double,
+        pagoIntereses: Double,
+        recargos: Double
+    ) async throws {
+        let formatter = ISO8601DateFormatter()
+        let payload = ActualizarPago(
+            fechaPago: formatter.string(from: Date()),
+            montoPagado: monto,
+            formaPagoId: formaPagoId,
+            abonoCapital: abonoCapital,
+            pagoIntereses: pagoIntereses,
+            recargos: recargos
+        )
+        
+        try await supabase
+            .from("pagos")
+            .update(payload)
+            .eq("id", value: pagoId)
+            .execute()
     }
 }
 

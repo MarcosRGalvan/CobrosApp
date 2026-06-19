@@ -19,7 +19,6 @@ struct Pago: Identifiable, Codable, Hashable {
     let fechaVencimiento: Date?
     let referenciaPago: String?
     let formaPagoId: Int?
-    let vencido: Bool
     let prestamos: PrestamoAnidado?
 
     enum CodingKeys: String, CodingKey {
@@ -34,7 +33,6 @@ struct Pago: Identifiable, Codable, Hashable {
         case fechaVencimiento = "fecha_vencimiento"
         case referenciaPago = "referencia_pago"
         case formaPagoId = "forma_pago_id"
-        case vencido
         case prestamos = "prestamos"
     }
 
@@ -48,10 +46,16 @@ struct Pago: Identifiable, Codable, Hashable {
 
 struct PrestamoAnidado: Codable, Hashable {
     let prestamoId: Int
+    let montoPrestado: Double
+    let cuotas: Int
+    let interesPorciento: Double
     let clientes: ClienteAnidado?
 
     enum CodingKeys: String, CodingKey {
         case prestamoId = "prestamo_id"
+        case montoPrestado = "monto_prestado"
+        case cuotas
+        case interesPorciento = "interes_porciento"
         case clientes
     }
 }

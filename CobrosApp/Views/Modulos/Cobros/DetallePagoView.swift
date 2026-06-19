@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct DetallePagoView: View {
-    let pago: Pago
-    let cliente: ClienteAnidado?
+    @State private var viewModel: DetallePagoViewModel
+    @Environment(\.dismiss) private var dismiss
     
-    @State private var fp = FormasPagoViewModel()
-    @State private var formaPagoSeleccionadaId: Int?
-    @State private var montoIngresado: String = ""
+    init(pago: Pago, cliente: ClienteAnidado?) {
+        _viewModel = State(initialValue: DetallePagoViewModel(pago: pago, cliente: cliente))
+    }
 
     
     var body: some View {
@@ -21,14 +21,14 @@ struct DetallePagoView: View {
             Section(header: Text("Datos del Cliente")) {
                 VStack(alignment: .leading, spacing: 12) {
                     Label {
-                        Text("\(cliente?.nombre ?? "") \(cliente?.appaterno ?? "") \(cliente?.apmaterno ?? "")")
+                        Text("\(viewModel.cliente?.nombre ?? "") \(viewModel.cliente?.appaterno ?? "") \(viewModel.cliente?.apmaterno ?? "")")
                             .font(.title2)
                             .bold()
                     } icon: {
                         Image(systemName: "person.crop.circle.fill")
                     }
                     
-                    if let direccion = cliente?.direccion, !direccion.isEmpty {
+                    if let direccion = viewModel.cliente?.direccion, !direccion.isEmpty {
                         Label {
                             Text(direccion)
                         } icon: {
@@ -38,7 +38,7 @@ struct DetallePagoView: View {
                         .foregroundStyle(.secondary)
                     }
                     
-                    if let telefono = cliente?.telefono, !telefono.isEmpty {
+                    if let telefono = viewModel.cliente?.telefono, !telefono.isEmpty {
                         Label {
                             Text(telefono)
                         } icon: {
@@ -48,7 +48,7 @@ struct DetallePagoView: View {
                         .foregroundStyle(.secondary)
                     }
                     
-                    if let email = cliente?.email, !email.isEmpty {
+                    if let email = viewModel.cliente?.email, !email.isEmpty {
                         Label {
                             Text(email)
                         } icon: {
@@ -61,7 +61,7 @@ struct DetallePagoView: View {
             }
             
             Section(header: Text("Detalles del Pago")) {
-                if let numPago = pago.numeroCuota {
+                if let numPago = viewModel.pago.numeroCuota {
                     Label {
                         Text("Pago número: \(numPago)")
                     } icon: {
@@ -73,7 +73,7 @@ struct DetallePagoView: View {
                 }
                 
                 Label {
-                    Text("Número de Prestamo: \(pago.prestamoId)")
+                    Text("Número de Prestamo: \(viewModel.pago.prestamoId)")
                 } icon: {
                     Image(systemName: "numbers.rectangle.fill")
                         .foregroundStyle(.cyan)
@@ -82,7 +82,7 @@ struct DetallePagoView: View {
                 .foregroundStyle(.secondary)
                     
                 Label {
-                    Text("Total Pago: \(pago.montoPagado, format: .currency(code: "MXN"))")
+                    Text("Total Pago: \(viewModel.pago.montoPagado, format: .currency(code: "MXN"))")
                 } icon: {
                     Image(systemName: "dollarsign.circle.fill")
                         .foregroundStyle(.yellow)
@@ -90,14 +90,14 @@ struct DetallePagoView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                     
-                if fp.isLoading {
+                if viewModel.isLoadingFormasPago {
                     ProgressView("Cargando formas de pago...")
                 } else {
                     HStack {
                         Label("", systemImage: "creditcard.fill")
-                        Picker("Forma de Pago", selection: $formaPagoSeleccionadaId) {
+                        Picker("Forma de Pago", selection: $viewModel.formaPagoSeleccionada) {
                             Text("Selecciona").tag(Int?.none)
-                            ForEach(fp.formasPago.filter { $0.activo }) { forma in
+                            ForEach(viewModel.formasPago) { forma in
                                 Text(forma.descripcion).tag(forma.id)
                             }
                         }
@@ -107,20 +107,48 @@ struct DetallePagoView: View {
                 }
                     
                 VStack(spacing: 16) {
-                    TextField("$0.00", text: $montoIngresado)
+                    TextField("$0.00", text: $viewModel.montoIngresado)
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.center)
                         .font(.title)
                         .bold()
+                    
+                    VStack(spacing: 4) {
+                        HStack {
+                            Text("Intereses:")
+                            Spacer()
+                            Text(viewModel.pagoIntereses, format: .currency(code: "MXN"))
+                        }
+                        if viewModel.estaVencido {
+                            HStack {
+                                Text("Recargo (10%):")
+                                    .foregroundStyle(.red)
+                                Spacer()
+                                Text(viewModel.recargos, format: .currency(code: "MXN"))
+                                    .foregroundStyle(.red)
+                            }
+                        }
+                        HStack {
+                            Text("Abono a capital:")
+                            Spacer()
+                            Text(viewModel.abonoCapital, format: .currency(code: "MXN"))
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                         
                     Button {
-                            
+                        Task { await viewModel.registrarPago() }
                     } label: {
-                        Text("Registrar Pago")
-                            .frame(maxWidth: .infinity)
+                        if viewModel.isGuardando {
+                            ProgressView().frame(maxWidth: .infinity)
+                        } else {
+                            Text("Registrar Pago").frame(maxWidth: .infinity)
+                        }
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
+                    .disabled(viewModel.isGuardando)
                     
                     HStack {
                         Button {
@@ -144,16 +172,27 @@ struct DetallePagoView: View {
             }
         }
         .navigationTitle("Detalle del Pago")
-        .task {
-            await fp.fetchFormasPago()
-            formaPagoSeleccionadaId = pago.formaPagoId
+        .task { await viewModel.cargarDatosIniciales() }
+        .onChange(of: viewModel.pagoRegistradoExitosamente) { _, exitoso in
+            if exitoso { dismiss() }
+        }
+        .alert(
+            "Error",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { _ in viewModel.errorMessage = nil }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "")
         }
     }
 }
 
 #Preview {
     DetallePagoView(
-            pago: Pago(id: 45, prestamoId: 22, fechaPago: nil, montoPagado: 500, abonoCapital: 0, pagoIntereses: 0, recargos: 0, numeroCuota: 3, fechaVencimiento: nil, referenciaPago: "", formaPagoId: nil, vencido: false, prestamos: nil),
+            pago: Pago(id: 45, prestamoId: 22, fechaPago: nil, montoPagado: 500, abonoCapital: 0, pagoIntereses: 0, recargos: 0, numeroCuota: 3, fechaVencimiento: nil, referenciaPago: "", formaPagoId: nil, prestamos: nil),
             
             cliente: ClienteAnidado(nombre: "Marco", appaterno: "Ramirez", apmaterno: "Galvan", telefono: "4353453454", direccion: "Calle Falsa 123", email: "marco@email.com")
         )

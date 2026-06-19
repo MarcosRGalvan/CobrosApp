@@ -45,7 +45,7 @@ struct CobrosDiariosView: View {
                 }
             }
         }
-        .navigationTitle("Cobros de Hoy")
+        .navigationTitle("Cobros Pendientes")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Toggle(isOn: $mostrarSoloPendientes) {
