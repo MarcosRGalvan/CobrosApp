@@ -23,7 +23,8 @@ struct ContentView: View {
         HomeItem(icon: "road.lanes.curved.right", title: "Ruta del Dia", destination: .rutaDelDia),
         HomeItem(icon: "person.fill", title: "Clientes", destination: .clientes),
         HomeItem(icon: "dollarsign", title: "Prestamos", destination: .prestamos),
-        HomeItem(icon: "banknote.fill", title: "Hitorial de Pagos", destination: .pagos)
+        HomeItem(icon: "banknote.fill", title: "Hitorial de Pagos", destination: .pagos),
+        HomeItem(icon: "person.badge.shield.checkmark.fill", title: "Usuarios", destination: .usuarios)
     ]
     
     private let columns: [GridItem] = [
@@ -92,6 +93,8 @@ struct ContentView: View {
                     EmptyView()
                 case .rutaDelDia:
                     CobrosDiariosView()
+                case .usuarios:
+                    UsuariosListView()
                 }
             }
             .toolbar {

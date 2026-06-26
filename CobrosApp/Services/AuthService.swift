@@ -47,43 +47,44 @@ class AuthService {
             .execute()
             .value
     }
-    
+
     func crearOrganizacion(nombre: String) async throws -> Organizacion {
-            let clave = generarClaveOrganizacion()
+        let clave = generarClaveOrganizacion()
 
-            // 1. Crear org
-            let org: Organizacion = try await supabase
-                .from("organizaciones")
-                .insert(["nombre": nombre, "clave": clave])
-                .select()
-                .single()
-                .execute()
-                .value
-
-            // 2. Crear usuario admin en Auth
-            let email = buildEmail(claveOrg: clave, clave: "admin")
-            let user = try await supabase.auth.admin.createUser(
-                attributes: AdminUserAttributes(
-                    email: email,
-                    emailConfirm: true, 
-                    password: "admin"
-                )
-            )
-
-            // 3. Insertar perfil admin en tabla usuarios
+        // 1. Crear org
+        let org: Organizacion =
             try await supabase
-                .from("usuarios")
-                .insert([
-                    "id": user.id.uuidString,
-                    "organizacion_id": org.id.uuidString,
-                    "nombre": "Administrador",
-                    "clave": "admin",
-                    "rol": "admin"
-                ])
-                .execute()
+            .from("organizaciones")
+            .insert(["nombre": nombre, "clave": clave])
+            .select()
+            .single()
+            .execute()
+            .value
 
-            return org
-        }
+        // 2. Crear usuario admin en Auth
+        let email = buildEmail(claveOrg: clave, clave: "admin")
+        let user = try await supabase.auth.admin.createUser(
+            attributes: AdminUserAttributes(
+                email: email,
+                emailConfirm: true,
+                password: "admin"
+            )
+        )
+
+        // 3. Insertar perfil admin en tabla usuarios
+        try await supabase
+            .from("usuarios")
+            .insert([
+                "id": user.id.uuidString,
+                "organizacion_id": org.id.uuidString,
+                "nombre": "Administrador",
+                "clave": "admin",
+                "rol": "admin",
+            ])
+            .execute()
+
+        return org
+    }
 
     // El admin crea cobradores desde la app
     func crearCobrador(
@@ -94,30 +95,44 @@ class AuthService {
         organizacionId: UUID,
         claveOrg: String
     ) async throws {
-        let email = buildEmail(claveOrg: claveOrg, clave: clave)
+        struct Payload: Encodable {
+            let nombre: String
+            let clave: String
+            let telefono: String?
+            let direccion: String?
+            let claveOrg: String
+        }
+        
+        // Obtiene el token de la sesión activa
+        guard let token = supabase.auth.currentSession?.accessToken else {
+            throw AuthError.noAutenticado
+        }
 
-        // Crear en Auth
-        let user = try await supabase.auth.admin.createUser(
-            attributes: AdminUserAttributes(
-                email: email,
-                emailConfirm: true,
-                password: clave
-            )
+        let payload = Payload(
+            nombre: nombre,
+            clave: clave,
+            telefono: telefono,
+            direccion: direccion,
+            claveOrg: claveOrg
         )
 
-        // Insertar perfil
-        try await supabase
+        try await supabase.functions.invoke(
+            "rapid-handler",
+            options: FunctionInvokeOptions(
+                headers: ["Authorization": "Bearer \(token)"],
+                body: payload)
+        )
+    }
+
+    func fetchUsuarios() async throws -> [Usuario] {
+        return
+            try await supabase
             .from("usuarios")
-            .insert([
-                "id": user.id.uuidString,
-                "organizacion_id": organizacionId.uuidString,
-                "nombre": nombre,
-                "clave": clave,
-                "rol": "cobrador",
-                "telefono": telefono,
-                "direccion": direccion
-            ])
+            .select()
+            .eq("rol", value: "cobrador")
+            .order("nombre")
             .execute()
+            .value
     }
 }
 

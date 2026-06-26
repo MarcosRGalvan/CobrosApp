@@ -13,4 +13,5 @@ enum HomeDestination: Hashable {
     case pagos
     case rutaDelDia
     case crearPrestamo(Cliente?)
+    case usuarios
 }
