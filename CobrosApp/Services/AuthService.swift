@@ -1,0 +1,126 @@
+//
+//  AuthService.swift
+//  CobrosApp
+//
+//  Created by Marco Ramirez on 25/06/26.
+//
+
+import Foundation
+import Supabase
+
+class AuthService {
+    private let supabase = SupabaseManager.shared.client
+
+    // Construye el email interno que nunca ve el usuario
+    private func buildEmail(claveOrg: String, clave: String) -> String {
+        "\(claveOrg.lowercased()).\(clave.lowercased())@cobrosapp.internal"
+    }
+
+    // Genera un codigo random de organización
+    func generarClaveOrganizacion() -> String {
+        let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        return String((0..<6).map { _ in chars.randomElement()! })
+    }
+
+    // Login para admin y cobrador - misma pantalla, misma logica
+    func login(claveOrg: String, clave: String) async throws -> Usuario {
+        let email = buildEmail(claveOrg: claveOrg, clave: clave)
+        try await supabase.auth.signIn(email: email, password: clave)
+        return try await fetchUsuarioActual()
+    }
+
+    func logout() async throws {
+        try await supabase.auth.signOut()
+    }
+
+    // Obtiene el perfil del usuario autenticado
+    func fetchUsuarioActual() async throws -> Usuario {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw AuthError.noAutenticado
+        }
+        return
+            try await supabase
+            .from("usuarios")
+            .select()
+            .eq("id", value: userId)
+            .single()
+            .execute()
+            .value
+    }
+    
+    func crearOrganizacion(nombre: String) async throws -> Organizacion {
+            let clave = generarClaveOrganizacion()
+
+            // 1. Crear org
+            let org: Organizacion = try await supabase
+                .from("organizaciones")
+                .insert(["nombre": nombre, "clave": clave])
+                .select()
+                .single()
+                .execute()
+                .value
+
+            // 2. Crear usuario admin en Auth
+            let email = buildEmail(claveOrg: clave, clave: "admin")
+            let user = try await supabase.auth.admin.createUser(
+                attributes: AdminUserAttributes(
+                    email: email,
+                    emailConfirm: true, 
+                    password: "admin"
+                )
+            )
+
+            // 3. Insertar perfil admin en tabla usuarios
+            try await supabase
+                .from("usuarios")
+                .insert([
+                    "id": user.id.uuidString,
+                    "organizacion_id": org.id.uuidString,
+                    "nombre": "Administrador",
+                    "clave": "admin",
+                    "rol": "admin"
+                ])
+                .execute()
+
+            return org
+        }
+
+    // El admin crea cobradores desde la app
+    func crearCobrador(
+        nombre: String,
+        clave: String,
+        telefono: String?,
+        direccion: String?,
+        organizacionId: UUID,
+        claveOrg: String
+    ) async throws {
+        let email = buildEmail(claveOrg: claveOrg, clave: clave)
+
+        // Crear en Auth
+        let user = try await supabase.auth.admin.createUser(
+            attributes: AdminUserAttributes(
+                email: email,
+                emailConfirm: true,
+                password: clave
+            )
+        )
+
+        // Insertar perfil
+        try await supabase
+            .from("usuarios")
+            .insert([
+                "id": user.id.uuidString,
+                "organizacion_id": organizacionId.uuidString,
+                "nombre": nombre,
+                "clave": clave,
+                "rol": "cobrador",
+                "telefono": telefono,
+                "direccion": direccion
+            ])
+            .execute()
+    }
+}
+
+enum AuthError: Error {
+    case noAutenticado
+}

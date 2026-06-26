@@ -61,11 +61,11 @@ struct DetallePagoView: View {
             }
             
             Section(header: Text("Detalles del Pago")) {
-                if let numPago = viewModel.pago.numeroCuota {
+                if let totalCuotas = viewModel.pago.prestamos?.cuotas {
                     Label {
-                        Text("Pago número: \(numPago)")
+                        Text("Pagos realizados: \(viewModel.totalPagosRealizados) de \(totalCuotas)")
                     } icon: {
-                        Image(systemName: "number.square.fill")
+                        Image(systemName: "checkmark.gobackward")
                             .foregroundStyle(.cyan)
                     }
                     .font(.subheadline)
@@ -73,9 +73,9 @@ struct DetallePagoView: View {
                 }
                 
                 Label {
-                    Text("Número de Prestamo: \(viewModel.pago.prestamoId)")
+                    Text("Saldo restante: \(viewModel.saldoRestante, format: .currency(code: "MXN"))")
                 } icon: {
-                    Image(systemName: "numbers.rectangle.fill")
+                    Image(systemName: "creditcard.and.123")
                         .foregroundStyle(.cyan)
                 }
                 .font(.subheadline)

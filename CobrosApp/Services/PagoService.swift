@@ -157,6 +157,37 @@ class PagoService {
             .eq("id", value: pagoId)
             .execute()
     }
+    
+    // Metodo para contar los pagos realizados
+    func totalPagosRealizados(prestamoId: Int) async throws -> Int {
+        let response = try await supabase
+            .from("pagos")
+            .select("id", head: false, count: .exact)
+            .eq("prestamo_id", value: prestamoId)
+            .not("fecha_pago", operator: .is, value: "null")
+            .execute()
+        
+        return response.count ?? 0
+    }
+    
+    func saldoPendinete(prestamoId: Int) async throws -> Double {
+        struct SaldoPendiente: Decodable {
+            let abonoCapital: Double?
+            enum CodingKeys: String, CodingKey {
+                case abonoCapital = "abono_capital"
+            }
+        }
+        
+        let response: [SaldoPendiente] = try await supabase
+            .from("pagos")
+            .select("abono_capital")
+            .eq("prestamo_id", value: prestamoId)
+            .not("fecha_pago", operator: .is, value: "null")
+            .execute()
+            .value
+        
+        return response.compactMap { $0.abonoCapital }.reduce(0, +)
+    }
 }
 
 extension Double {

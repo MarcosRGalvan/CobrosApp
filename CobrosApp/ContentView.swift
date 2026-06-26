@@ -17,6 +17,7 @@ struct HomeItem: Identifiable {
 struct ContentView: View {
     @State private var isPresentingAboutView = false
     @State private var path = NavigationPath()          // ← NUEVO
+    @Environment(AuthViewModel.self) private var auth
     
     private let items: [HomeItem] = [
         HomeItem(icon: "road.lanes.curved.right", title: "Ruta del Dia", destination: .rutaDelDia),
@@ -94,12 +95,23 @@ struct ContentView: View {
                 }
             }
             .toolbar {
-                Button(action: {
-                    isPresentingAboutView = true
-                }) {
-                    Image(systemName: "info.circle")
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        Task { await auth.logout() }
+                    } label: {
+                        Label("Cerrar Sesión", systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+                    .tint(.red)
                 }
-                .accessibilityLabel("Acerca de esta App")
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: {
+                        isPresentingAboutView = true
+                    }) {
+                        Image(systemName: "info.circle")
+                    }
+                    .accessibilityLabel("Acerca de esta App")
+                }
             }
             .sheet(isPresented: $isPresentingAboutView) {
                 AboutAppView()

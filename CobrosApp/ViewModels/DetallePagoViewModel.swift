@@ -15,6 +15,8 @@ class DetallePagoViewModel {
     
     var montoIngresado: String = ""
     var formaPagoSeleccionada: Int?
+    var totalPagosRealizados: Int = 0
+    var saldoRestante: Double = 0
     
     var isGuardando = false
     var errorMessage: String?
@@ -56,6 +58,17 @@ class DetallePagoViewModel {
         formaPagoSeleccionada = pago.formaPagoId
         let total = (pago.montoPagado + recargos).rounded(toPlaces: 2)
         montoIngresado = String(format: "%.2f", total)
+        
+        do {
+            totalPagosRealizados = try await pagoService.totalPagosRealizados(prestamoId: pago.prestamoId)
+            
+            if let montoPrestado = pago.prestamos?.montoPrestado {
+                let capitalPagado = try await pagoService.saldoPendinete(prestamoId: pago.prestamoId)
+                saldoRestante = (montoPrestado - capitalPagado).rounded(toPlaces: 2)
+            }
+        } catch {
+            print("Error cargando datos: \(error.localizedDescription)")
+        }
     }
     
     func registrarPago() async {

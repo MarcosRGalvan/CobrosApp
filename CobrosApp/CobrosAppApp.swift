@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct CobrosAppApp: App {
+    @State private var authViewModel = AuthViewModel()
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environment(authViewModel)
         }
     }
 }
