@@ -57,9 +57,27 @@ class PrestamoViewModel {
         }
 
         do {
+            guard let userId = SupabaseManager.shared.client.auth.currentUser?.id else {
+                self.errorMessage = "No hay sesión activa"
+                self.isLoading = false
+                return false
+            }
+            
+            struct OrgRow: Decodable { let organizacion_id: UUID }
+            let orgRow: OrgRow = try await SupabaseManager.shared.client
+                .from("usuarios")
+                .select("organizacion_id")
+                .eq("id", value: userId)
+                .single()
+                .execute()
+                .value
+            
+            var prestamoConOrg = prestamo
+            prestamoConOrg.organizacionId = orgRow.organizacion_id
+            
             let response = try await SupabaseManager.shared.client
                 .from("prestamos")
-                .insert(prestamo)
+                .insert(prestamoConOrg, returning: .representation)
                 .select()
                 .single()
                 .execute()
@@ -74,7 +92,7 @@ class PrestamoViewModel {
 
             try await PagoService().generarCuotas(
                 prestamoId: prestamoId,
-                prestamo: prestamo,
+                prestamo: prestamoConOrg,
                 frecuencia: frecuencia
             )
 

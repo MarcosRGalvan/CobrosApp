@@ -15,4 +15,16 @@ struct Cliente: Identifiable, Codable, Hashable {
     var telefono: String
     var direccion: String?
     var email: String?
+    var organizacionId: UUID?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case nombre
+        case appaterno
+        case apmaterno
+        case telefono
+        case direccion
+        case email
+        case organizacionId = "organizacion_id"
+    }
 }

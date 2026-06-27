@@ -192,7 +192,7 @@ struct DetallePagoView: View {
 
 #Preview {
     DetallePagoView(
-            pago: Pago(id: 45, prestamoId: 22, fechaPago: nil, montoPagado: 500, abonoCapital: 0, pagoIntereses: 0, recargos: 0, numeroCuota: 3, fechaVencimiento: nil, referenciaPago: "", formaPagoId: nil, prestamos: nil),
+        pago: Pago(id: 45, prestamoId: 22, fechaPago: nil, montoPagado: 500, abonoCapital: 0, pagoIntereses: 0, recargos: 0, numeroCuota: 3, fechaVencimiento: nil, referenciaPago: "", formaPagoId: nil, prestamos: nil, organizacionId: nil),
             
             cliente: ClienteAnidado(nombre: "Marco", appaterno: "Ramirez", apmaterno: "Galvan", telefono: "4353453454", direccion: "Calle Falsa 123", email: "marco@email.com")
         )

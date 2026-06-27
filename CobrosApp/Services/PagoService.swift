@@ -15,7 +15,7 @@ struct ActualizarPago: Encodable {
     let abonoCapital: Double
     let pagoIntereses: Double
     let recargos: Double
-    
+
     enum CodingKeys: String, CodingKey {
         case fechaPago = "fecha_pago"
         case montoPagado = "monto_pagado"
@@ -24,6 +24,14 @@ struct ActualizarPago: Encodable {
         case pagoIntereses = "pago_intereses"
         case recargos
     }
+}
+
+struct PagoInsert: Encodable {
+    let prestamo_id: Int
+    let monto_pagado: Double
+    let numero_cuota: Int
+    let fecha_vencimiento: String
+    let organizacion_id: UUID
 }
 
 class PagoService {
@@ -37,42 +45,37 @@ class PagoService {
     ) async throws {
         print("diasIntervalo recibido: \(frecuencia.diasIntervalo)")
         print("fechaPrestamo: \(prestamo.fechaPrestamo)")
-        
+
         guard frecuencia.diasIntervalo > 0, prestamo.cuotas > 0 else { return }
-        
+        guard let orgId = prestamo.organizacionId else {
+            throw NSError(domain: "PagoService", code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "Sin organizacion_id"])
+        }
+
         let calendar = Calendar.current
         let fechaBase = calendar.startOfDay(for: prestamo.fechaPrestamo)
-        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+
         let montoPorCuota = ((prestamo.montoPrestado * (1 + prestamo.interesPorciento / 100)) / Double(prestamo.cuotas))
             .rounded(toPlaces: 2)
-        
-        var pagos: [Pago] = []
+
+        var pagos: [PagoInsert] = []
 
         for i in 1...prestamo.cuotas {
-            guard
-                let fechaVence = calendar.date(
-                    byAdding: .day,
-                    value: frecuencia.diasIntervalo * i,
-                    to: fechaBase
-                )
-            else { continue }
+            guard let fechaVence = calendar.date(
+                byAdding: .day,
+                value: frecuencia.diasIntervalo * i,
+                to: fechaBase
+            ) else { continue }
 
-            pagos.append(
-                Pago(
-                    id: nil,
-                    prestamoId: prestamoId,
-                    fechaPago: nil,
-                    montoPagado: montoPorCuota,
-                    abonoCapital: nil,
-                    pagoIntereses: nil,
-                    recargos: nil,
-                    numeroCuota: i,
-                    fechaVencimiento: fechaVence,
-                    referenciaPago: nil,
-                    formaPagoId: nil,
-                    prestamos: nil
-                )
-            )
+            pagos.append(PagoInsert(
+                prestamo_id: prestamoId,
+                monto_pagado: montoPorCuota,
+                numero_cuota: i,
+                fecha_vencimiento: formatter.string(from: fechaVence),
+                organizacion_id: orgId
+            ))
         }
 
         try await supabase
@@ -81,19 +84,15 @@ class PagoService {
             .execute()
     }
 
-    // Pagos que vencen hoy y no han sido cobrados
+    // Pagos pendientes (hoy y vencidos anteriores)
     func fetchCobrosDiarios() async throws -> [Pago] {
         let hoy = Calendar.current.startOfDay(for: Date())
         let manana = Calendar.current.date(byAdding: .day, value: 1, to: hoy)!
 
         let formatter = ISO8601DateFormatter()
-        let desde = formatter.string(from: hoy)
         let hasta = formatter.string(from: manana)
 
-        print("🗓 Buscando cobros entre: \(desde) y \(hasta)")
-
-        let response =
-            try await supabase
+        let response = try await supabase
             .from("pagos")
             .select("""
                 *,
@@ -109,16 +108,14 @@ class PagoService {
                         telefono,
                         direccion,
                         email
-                        )
                     )
+                )
             """)
-            .gte("fecha_vencimiento", value: desde)
             .lt("fecha_vencimiento", value: hasta)
+            //.is("fecha_pago", value: nil)
             .execute()
 
-        print(
-            "📦 Raw response: \(String(data: response.data, encoding: .utf8) ?? "nil")"
-        )
+        print("📦 Raw response: \(String(data: response.data, encoding: .utf8) ?? "nil")")
 
         do {
             let decoder = JSONDecoder()
@@ -131,8 +128,8 @@ class PagoService {
             throw error
         }
     }
-    
-    // Marca un pago como cobrado: registra fecha, monto y forma de pago
+
+    // Marca un pago como cobrado
     func registrarPago(
         pagoId: Int,
         monto: Double,
@@ -150,15 +147,15 @@ class PagoService {
             pagoIntereses: pagoIntereses,
             recargos: recargos
         )
-        
+
         try await supabase
             .from("pagos")
             .update(payload)
             .eq("id", value: pagoId)
             .execute()
     }
-    
-    // Metodo para contar los pagos realizados
+
+    // Total de pagos realizados para un préstamo
     func totalPagosRealizados(prestamoId: Int) async throws -> Int {
         let response = try await supabase
             .from("pagos")
@@ -166,18 +163,19 @@ class PagoService {
             .eq("prestamo_id", value: prestamoId)
             .not("fecha_pago", operator: .is, value: "null")
             .execute()
-        
+
         return response.count ?? 0
     }
-    
-    func saldoPendinete(prestamoId: Int) async throws -> Double {
+
+    // Saldo pagado de capital para un préstamo
+    func saldoPendiente(prestamoId: Int) async throws -> Double {
         struct SaldoPendiente: Decodable {
             let abonoCapital: Double?
             enum CodingKeys: String, CodingKey {
                 case abonoCapital = "abono_capital"
             }
         }
-        
+
         let response: [SaldoPendiente] = try await supabase
             .from("pagos")
             .select("abono_capital")
@@ -185,7 +183,7 @@ class PagoService {
             .not("fecha_pago", operator: .is, value: "null")
             .execute()
             .value
-        
+
         return response.compactMap { $0.abonoCapital }.reduce(0, +)
     }
 }

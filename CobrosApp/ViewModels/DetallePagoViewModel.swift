@@ -63,7 +63,7 @@ class DetallePagoViewModel {
             totalPagosRealizados = try await pagoService.totalPagosRealizados(prestamoId: pago.prestamoId)
             
             if let montoPrestado = pago.prestamos?.montoPrestado {
-                let capitalPagado = try await pagoService.saldoPendinete(prestamoId: pago.prestamoId)
+                let capitalPagado = try await pagoService.saldoPendiente(prestamoId: pago.prestamoId)
                 saldoRestante = (montoPrestado - capitalPagado).rounded(toPlaces: 2)
             }
         } catch {

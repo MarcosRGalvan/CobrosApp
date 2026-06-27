@@ -69,9 +69,40 @@ class ClienteViewModel {
         }
         
         do {
+            // Obtenemos la organización del usuario actual
+            guard let userId = SupabaseManager.shared.client.auth.currentUser?.id else {
+                await MainActor.run {
+                    self.errorMessage = "No hay sesión activa"
+                    self.isLoading = false
+                }
+                return nil
+            }
+            
+            struct OrgRow: Decodable { let organizacion_id: UUID }
+            let orgRow: OrgRow = try await SupabaseManager.shared.client
+                .from("usuarios")
+                .select("organizacion_id")
+                .eq("id", value: userId)
+                .single()
+                .execute()
+                .value
+            
+            var clienteConOrg = cliente
+            clienteConOrg.organizacionId = orgRow.organizacion_id
+            
+            print("🏢 organizacionId a insertar: \(String(describing: clienteConOrg.organizacionId))")
+            print("👤 userId: \(userId)")
+            
+            let encoder = JSONEncoder()
+            encoder.keyEncodingStrategy = .convertToSnakeCase
+            if let data = try? encoder.encode(clienteConOrg),
+               let json = String(data: data, encoding: .utf8) {
+                print("📤 JSON a insertar: \(json)")
+            }
+            
             let clienteCreado: [Cliente] = try await SupabaseManager.shared.client
                 .from("clientes")
-                .insert(cliente)
+                .insert(clienteConOrg, returning: .representation)
                 .select()
                 .execute()
                 .value

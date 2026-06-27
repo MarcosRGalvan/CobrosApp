@@ -17,7 +17,7 @@ struct Prestamo: Identifiable, Codable {
     var interesPorciento: Double
     var fechaTermino: Date?
     var activo: Bool
-    
+    var organizacionId: UUID?
     var cliente: ClienteAnidado?
     
     enum CodingKeys: String, CodingKey {
@@ -31,6 +31,7 @@ struct Prestamo: Identifiable, Codable {
         case fechaTermino = "fecha_termino"
         case activo
         case cliente = "clientes"
+        case organizacionId = "organizacion_id"
     }
     
     var nombreCompletoCliente: String {
