@@ -15,6 +15,7 @@ struct ActualizarPago: Encodable {
     let abonoCapital: Double
     let pagoIntereses: Double
     let recargos: Double
+    let cobradorId: String
 
     enum CodingKeys: String, CodingKey {
         case fechaPago = "fecha_pago"
@@ -23,6 +24,7 @@ struct ActualizarPago: Encodable {
         case abonoCapital = "abono_capital"
         case pagoIntereses = "pago_intereses"
         case recargos
+        case cobradorId = "cobrador_id"
     }
 }
 
@@ -138,6 +140,11 @@ class PagoService {
         pagoIntereses: Double,
         recargos: Double
     ) async throws {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "PagoService", code: 0,
+                          userInfo: [NSLocalizedDescriptionKey: "No hay sesión activa"])
+        }
+        
         let formatter = ISO8601DateFormatter()
         let payload = ActualizarPago(
             fechaPago: formatter.string(from: Date()),
@@ -145,7 +152,8 @@ class PagoService {
             formaPagoId: formaPagoId,
             abonoCapital: abonoCapital,
             pagoIntereses: pagoIntereses,
-            recargos: recargos
+            recargos: recargos,
+            cobradorId: userId.uuidString
         )
 
         try await supabase
@@ -185,6 +193,66 @@ class PagoService {
             .value
 
         return response.compactMap { $0.abonoCapital }.reduce(0, +)
+    }
+    
+    
+    func fetchResumenDia(cobradorId: UUID) async throws -> ResumenDia {
+        let hoy = Calendar.current.startOfDay(for: Date())
+        let manana = Calendar.current.date(byAdding: .day, value: 1, to: hoy)!
+        let formatter = ISO8601DateFormatter()
+        let hasta = formatter.string(from: manana)
+        
+        struct PagoResumen: Decodable {
+            let fechaPago: Date?
+            let montoPagado: Double
+            enum CodingKeys: String, CodingKey {
+                case fechaPago = "fecha_pago"
+                case montoPagado = "monto_pagado"
+            }
+        }
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        let response = try await supabase
+            .from("pagos")
+            .select("fecha_pago, monto_pagado")
+            .lt("fecha_vencimiento", value: hasta)
+            .execute()
+        
+        let pagos = try decoder.decode([PagoResumen].self, from: response.data)
+        
+        // Pagos cobrados hoy por este cobrador
+        let cobrados = try await supabase
+            .from("pagos")
+            .select("monto_pagado", head: false, count: .exact)
+            .eq("cobrador_id", value: cobradorId.uuidString)
+            .gte("fecha_pago", value: formatter.string(from: hoy))
+            .lt("fecha_pago", value: hasta)
+            .execute()
+        
+        struct MontoPago: Decodable {
+            let montoPagado: Double
+            enum CodingKeys: String, CodingKey {
+                case montoPagado = "monto_pagado"
+            }
+        }
+        
+        let cobradosDetalle = try decoder.decode([MontoPago].self, from: cobrados.data)
+        let totalRecaudado = cobradosDetalle.map { $0.montoPagado }.reduce(0, +)
+        let cobrosRealizados = cobrados.count ?? 0
+        let totalAsignados = pagos.count
+        let pendientes = totalAsignados - cobrosRealizados
+        let efectividad = totalAsignados > 0
+            ? (Double(cobrosRealizados) / Double(totalAsignados)) * 100
+            : 0
+        
+        return ResumenDia(
+            cobrosRealizados: cobrosRealizados,
+            cobrosPendientes: pendientes,
+            totalRecaudado: totalRecaudado,
+            efectividad: efectividad
+        )
     }
 }
 

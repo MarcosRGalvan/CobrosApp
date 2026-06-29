@@ -19,13 +19,21 @@ struct ContentView: View {
     @State private var path = NavigationPath()          // ← NUEVO
     @Environment(AuthViewModel.self) private var auth
     
-    private let items: [HomeItem] = [
-        HomeItem(icon: "road.lanes.curved.right", title: "Ruta del Dia", destination: .rutaDelDia),
-        HomeItem(icon: "person.fill", title: "Clientes", destination: .clientes),
-        HomeItem(icon: "dollarsign", title: "Prestamos", destination: .prestamos),
-        HomeItem(icon: "banknote.fill", title: "Hitorial de Pagos", destination: .pagos),
-        HomeItem(icon: "person.badge.shield.checkmark.fill", title: "Usuarios", destination: .usuarios)
-    ]
+    private var items: [HomeItem] {
+        var result = [
+            HomeItem(icon: "road.lanes.curved.right", title: "Ruta del Dia", destination: .rutaDelDia),
+            HomeItem(icon: "person.fill", title: "Clientes", destination: .clientes),
+            HomeItem(icon: "dollarsign", title: "Prestamos", destination: .prestamos),
+            HomeItem(icon: "chart.bar.fill", title: "Mi Resumen", destination: .resumenDia),
+        ]
+        
+        if auth.esAdmin {
+            result.append(HomeItem(icon: "person.badge.shield.checkmark.fill", title: "Usuarios", destination: .usuarios))
+            result.append(HomeItem(icon: "gearshape.fill", title: "Configuración", destination: .configuracion))
+        }
+        
+        return result
+    }
     
     private let columns: [GridItem] = [
         GridItem(.adaptive(minimum: 120), spacing: 12)
@@ -89,12 +97,14 @@ struct ContentView: View {
                         viewModel: PrestamoViewModel(),
                         clientePreseleccionado: cliente
                     )
-                case .pagos:
-                    EmptyView()
+                case .resumenDia:
+                    ResumenDiaView()
                 case .rutaDelDia:
                     CobrosDiariosView()
                 case .usuarios:
                     UsuariosListView()
+                case .configuracion:
+                    EmptyView()
                 }
             }
             .toolbar {
