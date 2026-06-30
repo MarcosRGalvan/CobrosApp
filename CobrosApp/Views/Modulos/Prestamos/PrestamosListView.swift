@@ -10,6 +10,7 @@ import SwiftUI
 struct PrestamosListView: View {
     @Binding var path: NavigationPath
     @State private var viewModel = PrestamoViewModel()
+    @State private var textoBusqueda = ""
 
     var body: some View {
         Group {
@@ -38,7 +39,7 @@ struct PrestamosListView: View {
                     )
                 )
             } else {
-                List(viewModel.prestamos) { prestamo in
+                List(viewModel.prestamosFiltrados) { prestamo in
                     PrestamoRowView(prestamo: prestamo)
                 }
                 .refreshable {
@@ -47,6 +48,7 @@ struct PrestamosListView: View {
             }
         }
         .navigationTitle("Prestamos")
+        .searchable(text: $viewModel.textoBusqueda, prompt: "Buscar cliente...")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {

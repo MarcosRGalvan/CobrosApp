@@ -16,6 +16,18 @@ class PrestamoViewModel {
 
     var isLoading: Bool = false
     var errorMessage: String? = nil
+    
+    var prestamosFiltrados: [Prestamo] {
+        if textoBusqueda.isEmpty {
+            return prestamos
+        }
+        
+        return prestamos.filter { prestamo in
+            guard let cliente = prestamo.cliente else { return false }
+            let nombreCompleto = "\(cliente.nombre) \(cliente.appaterno)"
+            return nombreCompleto.lowercased().contains(textoBusqueda.lowercased())
+        }
+    }
 
     func fetchPrestamos() async {
         self.isLoading = true

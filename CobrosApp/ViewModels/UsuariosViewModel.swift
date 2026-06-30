@@ -14,11 +14,19 @@ class UsuariosViewModel {
     var isLoading = false
     var errorMessage: String?
     var usuarioCreado = false
+    var textoBusqueda: String = ""
     
     var nombre = ""
     var clave = ""
     var telefono = ""
     var direccion = ""
+    
+    var usuariosFiltrados: [Usuario] {
+        if textoBusqueda.isEmpty {
+            return usuarios
+        }
+        return usuarios.filter { $0.nombre.lowercased().contains(textoBusqueda.lowercased()) }
+    }
     
     private let authService = AuthService()
     

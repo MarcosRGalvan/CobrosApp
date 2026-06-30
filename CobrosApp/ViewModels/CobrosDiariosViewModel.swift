@@ -7,6 +7,22 @@ class CobrosDiariosViewModel {
     var isLoading = false
     var errorMessage: String?
     
+    var textoBusqueda: String = ""
+    var mostrarSoloPendientes: Bool = false
+    
+    var cobrosFiltrados: [Pago] {
+        var resultado = mostrarSoloPendientes
+        ? cobros.filter { $0.fechaPago == nil }
+        : cobros
+        
+        if !textoBusqueda.isEmpty {
+            resultado = resultado.filter {
+                $0.nombreCliente.lowercased().contains(textoBusqueda.lowercased())
+            }
+        }
+        return resultado
+    }
+    
     private let service = PagoService()
     private var tareaActual: Task<Void, Never>?
     

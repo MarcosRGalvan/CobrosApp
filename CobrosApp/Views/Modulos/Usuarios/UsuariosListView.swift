@@ -24,7 +24,7 @@ struct UsuariosListView: View {
                 )
             } else {
                 List {
-                    ForEach(viewModel.usuarios) { usuario in
+                    ForEach(viewModel.usuariosFiltrados) { usuario in
                         HStack(spacing: 12) {
                             Image(systemName: "person.circle.fill")
                                 .font(.title)
@@ -51,6 +51,7 @@ struct UsuariosListView: View {
             }
         }
         .navigationTitle("Cobradores")
+        .searchable(text: $viewModel.textoBusqueda, prompt: "Buscar cobrador...")
         .toolbar {
             if auth.esAdmin {
                 ToolbarItem(placement: .topBarTrailing) {

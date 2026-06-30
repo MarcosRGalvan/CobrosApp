@@ -9,14 +9,8 @@ import SwiftUI
 
 struct CobrosDiariosView: View {
     @State private var viewModel = CobrosDiariosViewModel()
-    @State private var mostrarSoloPendientes = false
     @State private var pagoSeleccionado: Pago? = nil
     
-    private var cobrosFiltrados: [Pago] {
-        mostrarSoloPendientes
-        ? viewModel.cobros.filter { $0.fechaPago == nil }
-        : viewModel.cobros
-    }
 
     var body: some View {
         Group {
@@ -28,9 +22,11 @@ struct CobrosDiariosView: View {
                     systemImage: "checkmark.seal.fill",
                     description: Text("No hay pagos que vencen hoy.")
                 )
+            } else if viewModel.cobrosFiltrados.isEmpty {
+                ContentUnavailableView.search(text: viewModel.textoBusqueda)
             } else {
                 List {
-                    ForEach(cobrosFiltrados) { pago in
+                    ForEach(viewModel.cobrosFiltrados) { pago in
                         Button {
                             pagoSeleccionado = pago
                         } label: {
@@ -46,9 +42,10 @@ struct CobrosDiariosView: View {
             }
         }
         .navigationTitle("Cobros Pendientes")
+        .searchable(text: $viewModel.textoBusqueda, prompt: "Buscar cliente...")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Toggle(isOn: $mostrarSoloPendientes) {
+                Toggle(isOn: $viewModel.mostrarSoloPendientes) {
                     Text("Solo Pendientes")
                         .font(.caption)
                 }
