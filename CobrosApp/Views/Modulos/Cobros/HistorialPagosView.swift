@@ -64,15 +64,19 @@ struct HistorialPagosView: View {
                                 .font(.subheadline)
                                 .bold()
                             if let fechaPago = pago.fechaPago,
-                               let fechaVence = pago.fechaVencimiento,
-                               fechaPago > fechaVence {
-                                Text("Tardío")
-                                    .font(.caption)
-                                    .foregroundStyle(.red)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.red.opacity(0.1))
-                                    .clipShape(Capsule())
+                               let fechaVence = pago.fechaVencimiento {
+                                let calendar = Calendar.current
+                                let pagoSinHora = calendar.startOfDay(for: fechaPago)
+                                let venceSinHora = calendar.startOfDay(for: fechaVence)
+                                if pagoSinHora > venceSinHora {
+                                    Text("Tardío")
+                                        .font(.caption)
+                                        .foregroundStyle(.red)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.red.opacity(0.1))
+                                        .clipShape(Capsule())
+                                }
                             }
                         }
                     }

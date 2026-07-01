@@ -47,6 +47,10 @@ class DetallePagoViewModel {
         return (monto - pagoIntereses - recargos).rounded(toPlaces: 2)
     }
     
+    var yaPagado: Bool {
+        pago.fechaPago != nil
+    }
+    
     private let pagoService = PagoService()
     private let formasPagoViewModel = FormasPagoViewModel()
     private let prestamoService = PrestamoService()

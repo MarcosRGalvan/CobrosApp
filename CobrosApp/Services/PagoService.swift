@@ -61,6 +61,7 @@ class PagoService {
         let fechaBase = calendar.startOfDay(for: prestamo.fechaPrestamo)
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone.current
 
         let montoPorCuota =
             ((prestamo.montoPrestado * (1 + prestamo.interesPorciento / 100))
@@ -163,6 +164,7 @@ class PagoService {
         }
 
         let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone.current
         let payload = ActualizarPago(
             fechaPago: formatter.string(from: Date()),
             montoPagado: monto,
@@ -327,9 +329,9 @@ class PagoService {
 
         let tardios = pagos.filter { pago in
             guard let fechaPago = pago.fechaPago,
-                let fechaVence = pago.fechaVencimiento
-            else { return false }
-            return fechaPago > fechaVence
+                let fechaVence = pago.fechaVencimiento else { return false }
+            let calendar = Calendar.current
+            return calendar.startOfDay(for: fechaPago) > calendar.startOfDay(for: fechaVence)
         }.count
 
         return (sinPagar.count ?? 0) + tardios
@@ -381,9 +383,9 @@ class PagoService {
 
         let aTiempo = pagos.filter { pago in
             guard let fechaPago = pago.fechaPago,
-                let fechaVence = pago.fechaVencimiento
-            else { return false }
-            return fechaPago <= fechaVence
+                let fechaVence = pago.fechaVencimiento else { return false }
+            let calendar = Calendar.current
+            return calendar.startOfDay(for: fechaPago) <= calendar.startOfDay(for: fechaVence)
         }.count
 
         let totalCount = total.count ?? 0

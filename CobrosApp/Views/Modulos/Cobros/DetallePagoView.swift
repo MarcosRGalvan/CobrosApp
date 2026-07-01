@@ -102,6 +102,7 @@ struct DetallePagoView: View {
                                 Text(forma.descripcion).tag(forma.id)
                             }
                         }
+                        .disabled(viewModel.yaPagado)
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -113,6 +114,7 @@ struct DetallePagoView: View {
                         .multilineTextAlignment(.center)
                         .font(.title)
                         .bold()
+                        .disabled(viewModel.yaPagado)
                     
                     VStack(spacing: 4) {
                         HStack {
@@ -144,12 +146,14 @@ struct DetallePagoView: View {
                         if viewModel.isGuardando {
                             ProgressView().frame(maxWidth: .infinity)
                         } else {
-                            Text("Registrar Pago").frame(maxWidth: .infinity)
+                            Text(viewModel.yaPagado ? "Pago Registrado" : "Registrar Pago")
+                                .frame(maxWidth: .infinity)
                         }
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
-                    .disabled(viewModel.isGuardando)
+                    .disabled(viewModel.isGuardando || viewModel.yaPagado)
+                    .tint(viewModel.yaPagado ? .gray : .blue)
                     
                     HStack {
                         Button {
