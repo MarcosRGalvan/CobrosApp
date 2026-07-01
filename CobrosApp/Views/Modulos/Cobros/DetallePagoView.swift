@@ -9,6 +9,7 @@ import SwiftUI
 
 struct DetallePagoView: View {
     @State private var viewModel: DetallePagoViewModel
+    @State private var mostrarHistorial = false
     @Environment(\.dismiss) private var dismiss
     
     init(pago: Pago, cliente: ClienteAnidado?) {
@@ -152,7 +153,7 @@ struct DetallePagoView: View {
                     
                     HStack {
                         Button {
-                            
+                            mostrarHistorial = true
                         } label: {
                             Text("Historial de pagos")
                         }
@@ -172,6 +173,19 @@ struct DetallePagoView: View {
             }
         }
         .navigationTitle("Detalle del Pago")
+        .sheet(isPresented: $mostrarHistorial) {
+            NavigationStack {
+                HistorialPagosView(
+                    prestamoId: viewModel.pago.prestamoId,
+                    nombreCliente: viewModel.cliente?.nombre ?? ""
+                )
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Cerrar") { mostrarHistorial = false }
+                    }
+                }
+            }
+        }
         .task { await viewModel.cargarDatosIniciales() }
         .onChange(of: viewModel.pagoRegistradoExitosamente) { _, exitoso in
             if exitoso { dismiss() }

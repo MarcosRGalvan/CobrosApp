@@ -390,6 +390,20 @@ class PagoService {
         guard totalCount > 0 else { return 0 }
         return (Double(aTiempo) / Double(totalCount)) * 100
     }
+    
+    
+    func fetchHistorialPagos(prestamoId: Int) async throws -> [Pago] {
+        let response = try await supabase
+            .from("pagos")
+            .select("*")
+            .eq("prestamo_id", value: prestamoId)
+            .order("numero_cuota", ascending: true)
+            .execute()
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode([Pago].self, from: response.data)
+    }
 }
 
 extension Double {
