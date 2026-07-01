@@ -66,9 +66,10 @@ struct ContentView: View {
                             .padding(.leading)
                         
                         VStack(spacing: 16) {
-                            Image(systemName: "dollarsign")
-                                .font(.system(size: 80, weight: .regular))
-                                .foregroundStyle(.blue)
+                            Image("icon")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 110, height: 110)
                             
                             Text("Cobros App")
                                 .font(.system(size: 35, weight: .regular))
@@ -165,4 +166,5 @@ private struct Tile: View {
 
 #Preview {
     ContentView()
+        .environment(AuthViewModel())
 }

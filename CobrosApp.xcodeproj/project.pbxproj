@@ -8,10 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		5DBF2B0D2FBD74FD00294A55 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 5DBF2B0C2FBD74FD00294A55 /* Supabase */; };
+		5DEC272A2FF5B268003B2734 /* CobrosAppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5DEC27292FF5B268003B2734 /* CobrosAppIcon.icon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		5DBF2A602FBD3BDA00294A55 /* CobrosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CobrosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DEC27292FF5B268003B2734 /* CobrosAppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = CobrosAppIcon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -40,6 +42,7 @@
 				5DBF2A622FBD3BDA00294A55 /* CobrosApp */,
 				5DBF2B0B2FBD74FD00294A55 /* Frameworks */,
 				5DBF2A612FBD3BDA00294A55 /* Products */,
+				5DEC27292FF5B268003B2734 /* CobrosAppIcon.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -126,6 +129,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5DEC272A2FF5B268003B2734 /* CobrosAppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -264,8 +268,9 @@
 		5DBF2A6C2FBD3BDA00294A55 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = CobrosAppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 593W6285R7;
@@ -299,8 +304,9 @@
 		5DBF2A6D2FBD3BDA00294A55 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = CobrosAppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 593W6285R7;

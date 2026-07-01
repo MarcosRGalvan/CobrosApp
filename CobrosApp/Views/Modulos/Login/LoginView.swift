@@ -18,9 +18,10 @@ struct LoginView: View {
             Spacer()
             
             VStack(spacing: 8) {
-                Image(systemName: "dollarsign.circle.fill")
-                    .font(.system(size: 70))
-                    .foregroundStyle(.blue)
+                Image("icon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 110, height: 110)
                 Text("Cobros App")
                     .font(.largeTitle)
                     .bold()
@@ -76,7 +77,8 @@ struct LoginView: View {
     }
 }
 
-/*
+
 #Preview {
     LoginView()
-}*/
+        .environment(AuthViewModel())
+}

@@ -1,0 +1,74 @@
+{
+  "fill" : {
+    "automatic-gradient" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "510978-PIA6YJ-807.png",
+          "name" : "510978-PIA6YJ-807",
+          "position" : {
+            "scale" : 0.4,
+            "translation-in-points" : [
+              -97.79999999999998,
+              -324.4177856626718
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "image-name" : "check-mark-correct-approved-icon-symbol-white-background-3d-illustration.png",
+          "name" : "check-mark-correct-approved-icon-symbol-white-background-3d-illustration",
+          "position" : {
+            "scale" : 0.08,
+            "translation-in-points" : [
+              -269.4,
+              341.0199231267954
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "image-name" : "45070f20-c8d9-44fb-a4fd-b5760f9d4cd3.png",
+          "name" : "45070f20-c8d9-44fb-a4fd-b5760f9d4cd3",
+          "position" : {
+            "scale" : 0.1,
+            "translation-in-points" : [
+              0,
+              130.7099231267955
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
