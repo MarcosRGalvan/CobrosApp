@@ -16,6 +16,8 @@ struct Cliente: Identifiable, Codable, Hashable {
     var direccion: String?
     var email: String?
     var organizacionId: UUID?
+    var latitud: Double?
+    var longitud: Double?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -26,5 +28,7 @@ struct Cliente: Identifiable, Codable, Hashable {
         case direccion
         case email
         case organizacionId = "organizacion_id"
+        case latitud
+        case longitud
     }
 }

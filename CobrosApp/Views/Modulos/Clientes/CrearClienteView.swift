@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct CrearClienteView: View {
     @Environment(\.dismiss) private var dismiss
@@ -18,6 +19,7 @@ struct CrearClienteView: View {
     @State private var telefono: String = ""
     @State private var direccion: String = ""
     @State private var email: String = ""
+    @State private var coordenada: CLLocationCoordinate2D?
     
     var body: some View {
         Form {
@@ -30,7 +32,7 @@ struct CrearClienteView: View {
                     .autocorrectionDisabled()
             }
             
-            Section(header: Text("Contacto y Ubicación")) {
+            Section(header: Text("Contacto")) {
                 TextField("Teléfono (10 dígitos)", text: $telefono)
                     .keyboardType(.phonePad)
                 TextField("Dirección completa", text: $direccion)
@@ -39,9 +41,12 @@ struct CrearClienteView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             }
+            
+            Section(header: Text("Ubicación del domicilio")) {
+                UbicacionMapaView(coordenada: $coordenada)
+            }
         }
         .navigationTitle("Nuevo Cliente")
-        //.navigationBarTitleDisplayMode(.inline)
         .interactiveDismissDisabled(viewModel.isLoading) // esto evita que el usuario haga el gesto de volver a la pantalla anterior
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -85,7 +90,11 @@ struct CrearClienteView: View {
             apmaterno: apmaterno.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : apmaterno,
             telefono: telefono.trimmingCharacters(in: .whitespacesAndNewlines),
             direccion: direccion.trimmingCharacters(in: .whitespacesAndNewlines),
-            email: email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : email
+            email: email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : email,
+            organizacionId: nil,
+            latitud: coordenada?.latitude,
+            longitud: coordenada?.longitude
+
         )
         
         if let clienteCreado = await viewModel.crearCliente(nuevoCliente) {

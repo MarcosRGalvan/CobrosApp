@@ -10,6 +10,7 @@ import SwiftUI
 enum ClienteDestino: Hashable {
     case crearCliente
     case crearPrestamo(Cliente)
+    case detalleCliente(Cliente)
 }
 
 struct ClientesListView: View {
@@ -26,16 +27,18 @@ struct ClientesListView: View {
                 )
             } else {
                 ForEach(viewModel.clientesFiltrados) { cliente in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(nombreCompleto(cliente))
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                        
-                        HCenterRow(icon: "phone.fill", text: cliente.telefono)
-                        HCenterRow(icon: "mappin.and.ellipse", text: cliente.direccion ?? "")
-                        HCenterRow(icon: "envelope", text: cliente.email ?? "")
+                    NavigationLink(value: ClienteDestino.detalleCliente(cliente)) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(nombreCompleto(cliente))
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            
+                            HCenterRow(icon: "phone.fill", text: cliente.telefono)
+                            HCenterRow(icon: "mappin.and.ellipse", text: cliente.direccion ?? "")
+                            HCenterRow(icon: "envelope", text: cliente.email ?? "")
+                        }
+                        .padding(.vertical, 4)
                     }
-                    .padding(.vertical, 4)
                 }
             }
         }
@@ -79,6 +82,8 @@ struct ClientesListView: View {
                     path = NavigationPath()
                     path.append(HomeDestination.prestamos)
                 }
+            case .detalleCliente(let cliente):
+                DetalleClienteView(cliente: cliente)
             }
         }
         .task {

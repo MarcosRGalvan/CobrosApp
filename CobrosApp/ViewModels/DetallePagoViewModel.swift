@@ -21,6 +21,8 @@ class DetallePagoViewModel {
     var isGuardando = false
     var errorMessage: String?
     var pagoRegistradoExitosamente = false
+    var mostrarAlertaUltimoPago = false
+    var prestamoFinalizado = false
     
     var isLoadingFormasPago: Bool { formasPagoViewModel.isLoading }
     var formasPago: [FormaPago] { formasPagoViewModel.formasPago.filter { $0.activo }}
@@ -47,6 +49,7 @@ class DetallePagoViewModel {
     
     private let pagoService = PagoService()
     private let formasPagoViewModel = FormasPagoViewModel()
+    private let prestamoService = PrestamoService()
     
     init(pago: Pago, cliente: ClienteAnidado?) {
         self.pago = pago
@@ -96,10 +99,32 @@ class DetallePagoViewModel {
                 recargos: recargos
             )
             isGuardando = false
+            
+            if let totalCuotas = pago.prestamos?.cuotas {
+                let pagosActualizados = totalPagosRealizados + 1
+                if pagosActualizados >= totalCuotas {
+                    mostrarAlertaUltimoPago = true
+                    return // No marca pagoRegistradoExitosamente todavia, espera confirmación
+                }
+            }
             pagoRegistradoExitosamente = true
         } catch {
             errorMessage = "No se pudo registrar el pago: \(error.localizedDescription)"
             isGuardando = false
         }
+    }
+    
+    func confirmarFinalizarPrestamo() async {
+        do {
+            try await prestamoService.finalizarPrestamo(prestamoId: pago.prestamoId)
+            prestamoFinalizado = true
+        } catch {
+            errorMessage = "No se pudo finalizar el préstamo: \(error.localizedDescription)"
+        }
+        pagoRegistradoExitosamente = true
+    }
+    
+    func continuarSinFinalizar() {
+        pagoRegistradoExitosamente = true
     }
 }

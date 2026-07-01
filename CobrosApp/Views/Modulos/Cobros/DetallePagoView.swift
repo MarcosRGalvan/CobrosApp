@@ -187,6 +187,22 @@ struct DetallePagoView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
+        .alert(
+            "Ultimo pago registrado",
+            isPresented: Binding(
+                get: { viewModel.mostrarAlertaUltimoPago },
+                set: { viewModel.mostrarAlertaUltimoPago = $0 }
+            )
+        ){
+            Button("Si, finalizar credito") {
+                Task { await viewModel.confirmarFinalizarPrestamo() }
+            }
+            Button("No, dejarlo activo", role: .cancel) {
+                viewModel.continuarSinFinalizar()
+            }
+        } message: {
+            Text("Este es el último pago del credito. ¿Deseas darlo por finalizado?")
+        }
     }
 }
 
