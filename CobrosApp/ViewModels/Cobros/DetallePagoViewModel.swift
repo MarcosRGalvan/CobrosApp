@@ -19,11 +19,13 @@ class DetallePagoViewModel {
     var saldoRestante: Double = 0
     
     var isGuardando = false
+    var isRegistrandoVisita = false
     var errorMessage: String?
     var pagoRegistradoExitosamente = false
     var mostrarAlertaUltimoPago = false
     var prestamoFinalizado = false
-    
+    var visitaSinPagoRegistrada: Bool
+
     var isLoadingFormasPago: Bool { formasPagoViewModel.isLoading }
     var formasPago: [FormaPago] { formasPagoViewModel.formasPago.filter { $0.activo }}
     
@@ -58,6 +60,7 @@ class DetallePagoViewModel {
     init(pago: Pago, cliente: ClienteAnidado?) {
         self.pago = pago
         self.cliente = cliente
+        self.visitaSinPagoRegistrada = pago.fechaVisitaSinPago != nil
     }
     
     func cargarDatosIniciales() async {
@@ -91,7 +94,12 @@ class DetallePagoViewModel {
             errorMessage = "Selecciona una forma de pago"
             return
         }
-        
+        guard monto >= pagoIntereses + recargos else {
+            let minimo = (pagoIntereses + recargos).formatted(.currency(code: "MXN"))
+            errorMessage = "El monto debe cubrir al menos los intereses\(estaVencido ? " y el recargo" : "") (\(minimo))"
+            return
+        }
+
         isGuardando = true
         do {
             try await pagoService.registrarPago(
@@ -118,6 +126,22 @@ class DetallePagoViewModel {
         }
     }
     
+    func registrarVisitaSinPago() async {
+        guard let pagoId = pago.id else {
+            errorMessage = "Este pago no tiene un ID válido"
+            return
+        }
+
+        isRegistrandoVisita = true
+        do {
+            try await pagoService.registrarVisitaSinPago(pagoId: pagoId)
+            visitaSinPagoRegistrada = true
+        } catch {
+            errorMessage = "No se pudo registrar la visita: \(error.localizedDescription)"
+        }
+        isRegistrandoVisita = false
+    }
+
     func confirmarFinalizarPrestamo() async {
         do {
             try await prestamoService.finalizarPrestamo(prestamoId: pago.prestamoId)

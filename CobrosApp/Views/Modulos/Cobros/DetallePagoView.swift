@@ -10,13 +10,25 @@ import SwiftUI
 struct DetallePagoView: View {
     @State private var viewModel: DetallePagoViewModel
     @State private var mostrarHistorial = false
+    @State private var mostrarConfirmacionSinPago = false
     @Environment(\.dismiss) private var dismiss
     
     init(pago: Pago, cliente: ClienteAnidado?) {
         _viewModel = State(initialValue: DetallePagoViewModel(pago: pago, cliente: cliente))
     }
 
-    
+    private var textoBotonSinPago: String {
+        viewModel.visitaSinPagoRegistrada ? "Visita registrada" : "Cliente no pago"
+    }
+
+    private var colorTextoBotonSinPago: Color {
+        viewModel.visitaSinPagoRegistrada ? .secondary : .red
+    }
+
+    private var colorTintBotonSinPago: Color {
+        viewModel.visitaSinPagoRegistrada ? .gray : .red
+    }
+
     var body: some View {
         Form {
             Section(header: Text("Datos del Cliente")) {
@@ -165,13 +177,18 @@ struct DetallePagoView: View {
                         .tint(.green)
                         
                         Button {
-                            
+                            mostrarConfirmacionSinPago = true
                         } label: {
-                            Text("Cliente no pago")
-                                .foregroundStyle(.red)
+                            if viewModel.isRegistrandoVisita {
+                                ProgressView()
+                            } else {
+                                Text(textoBotonSinPago)
+                                    .foregroundStyle(colorTextoBotonSinPago)
+                            }
                         }
                         .buttonStyle(.bordered)
-                        .tint(.red)
+                        .tint(colorTintBotonSinPago)
+                        .disabled(viewModel.yaPagado || viewModel.visitaSinPagoRegistrada || viewModel.isRegistrandoVisita)
                     }
                 }
             }
@@ -221,12 +238,23 @@ struct DetallePagoView: View {
         } message: {
             Text("Este es el último pago del credito. ¿Deseas darlo por finalizado?")
         }
+        .alert(
+            "Cliente no pagó",
+            isPresented: $mostrarConfirmacionSinPago
+        ) {
+            Button("Confirmar", role: .destructive) {
+                Task { await viewModel.registrarVisitaSinPago() }
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("¿Confirmas que visitaste al cliente hoy y no realizó su pago?")
+        }
     }
 }
 
 #Preview {
     DetallePagoView(
-        pago: Pago(id: 45, prestamoId: 22, fechaPago: nil, montoPagado: 500, abonoCapital: 0, pagoIntereses: 0, recargos: 0, numeroCuota: 3, fechaVencimiento: nil, referenciaPago: "", formaPagoId: nil, prestamos: nil, organizacionId: nil),
+        pago: Pago(id: 45, prestamoId: 22, fechaPago: nil, montoPagado: 500, abonoCapital: 0, pagoIntereses: 0, recargos: 0, numeroCuota: 3, fechaVencimiento: nil, referenciaPago: "", formaPagoId: nil, prestamos: nil, organizacionId: nil, fechaVisitaSinPago: nil),
             
             cliente: ClienteAnidado(nombre: "Marco", appaterno: "Ramirez", apmaterno: "Galvan", telefono: "4353453454", direccion: "Calle Falsa 123", email: "marco@email.com")
         )

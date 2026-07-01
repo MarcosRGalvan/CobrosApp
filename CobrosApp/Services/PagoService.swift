@@ -182,6 +182,26 @@ class PagoService {
             .execute()
     }
 
+    // Marca que el cobrador visitó al cliente pero no hubo pago
+    func registrarVisitaSinPago(pagoId: Int) async throws {
+        struct VisitaSinPago: Encodable {
+            let fechaVisitaSinPago: String
+            enum CodingKeys: String, CodingKey {
+                case fechaVisitaSinPago = "fecha_visita_sin_pago"
+            }
+        }
+
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone.current
+        let payload = VisitaSinPago(fechaVisitaSinPago: formatter.string(from: Date()))
+
+        try await supabase
+            .from("pagos")
+            .update(payload)
+            .eq("id", value: pagoId)
+            .execute()
+    }
+
     // Total de pagos realizados para un préstamo
     func totalPagosRealizados(prestamoId: Int) async throws -> Int {
         let response =
@@ -401,7 +421,7 @@ class PagoService {
             .eq("prestamo_id", value: prestamoId)
             .order("numero_cuota", ascending: true)
             .execute()
-        
+
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode([Pago].self, from: response.data)

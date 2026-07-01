@@ -29,58 +29,60 @@ struct HistorialPagosView: View {
                     description: Text("No hay pagos registrados para este préstamo.")
                 )
             } else {
-                List(viewModel.pagos) { pago in
-                    HStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(pago.fechaPago != nil ? Color.green.opacity(0.15) : Color.orange.opacity(0.15))
-                                .frame(width: 44, height: 44)
-                            Image(systemName: pago.fechaPago != nil ? "checkmark.circle.fill" : "clock.fill")
-                                .foregroundStyle(pago.fechaPago != nil ? .green : .orange)
-                                .font(.title3)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            if let cuota = pago.numeroCuota {
-                                Text("Cuota \(cuota)")
-                                    .font(.headline)
+                List {
+                    ForEach(viewModel.pagos) { pago in
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(pago.fechaPago != nil ? Color.green.opacity(0.15) : Color.orange.opacity(0.15))
+                                    .frame(width: 44, height: 44)
+                                Image(systemName: pago.fechaPago != nil ? "checkmark.circle.fill" : "clock.fill")
+                                    .foregroundStyle(pago.fechaPago != nil ? .green : .orange)
+                                    .font(.title3)
                             }
-                            if let fechaVence = pago.fechaVencimiento {
-                                Text("Vence: \(fechaVence, formatter: uiDateFormatter)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            if let fechaPago = pago.fechaPago {
-                                Text("Pagado: \(fechaPago, formatter: uiDateFormatter)")
-                                    .font(.caption)
-                                    .foregroundStyle(.green)
-                            }
-                        }
-                        
-                        Spacer()
-                        
-                        VStack(alignment: .trailing, spacing: 4) {
-                            Text(pago.montoPagado, format: .currency(code: "MXN"))
-                                .font(.subheadline)
-                                .bold()
-                            if let fechaPago = pago.fechaPago,
-                               let fechaVence = pago.fechaVencimiento {
-                                let calendar = Calendar.current
-                                let pagoSinHora = calendar.startOfDay(for: fechaPago)
-                                let venceSinHora = calendar.startOfDay(for: fechaVence)
-                                if pagoSinHora > venceSinHora {
-                                    Text("Tardío")
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                if let cuota = pago.numeroCuota {
+                                    Text("Cuota \(cuota)")
+                                        .font(.headline)
+                                }
+                                if let fechaVence = pago.fechaVencimiento {
+                                    Text("Vence: \(fechaVence, formatter: uiDateFormatter)")
                                         .font(.caption)
-                                        .foregroundStyle(.red)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Color.red.opacity(0.1))
-                                        .clipShape(Capsule())
+                                        .foregroundStyle(.secondary)
+                                }
+                                if let fechaPago = pago.fechaPago {
+                                    Text("Pagado: \(fechaPago, formatter: uiDateFormatter)")
+                                        .font(.caption)
+                                        .foregroundStyle(.green)
+                                }
+                            }
+
+                            Spacer()
+
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text(pago.montoPagado, format: .currency(code: "MXN"))
+                                    .font(.subheadline)
+                                    .bold()
+                                if let fechaPago = pago.fechaPago,
+                                   let fechaVence = pago.fechaVencimiento {
+                                    let calendar = Calendar.current
+                                    let pagoSinHora = calendar.startOfDay(for: fechaPago)
+                                    let venceSinHora = calendar.startOfDay(for: fechaVence)
+                                    if pagoSinHora > venceSinHora {
+                                        Text("Tardío")
+                                            .font(.caption)
+                                            .foregroundStyle(.red)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(Color.red.opacity(0.1))
+                                            .clipShape(Capsule())
+                                    }
                                 }
                             }
                         }
+                        .padding(.vertical, 4)
                     }
-                    .padding(.vertical, 4)
                 }
             }
         }
