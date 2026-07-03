@@ -52,7 +52,7 @@ class ClienteViewModel {
         } catch {
             print("❌ Error detallado de Supabase: \(error)")
             print(String(describing: error))
-
+            
             await MainActor.run {
                 self.errorMessage = "No se pudieron cargar los clientes: \(error.localizedDescription)"
                 self.isLoading = false
@@ -138,5 +138,49 @@ class ClienteViewModel {
             return false
         }
         return true
+    }
+    
+    // Actualizar un cliente existente
+    func actualizarCliente(_ cliente: Cliente) async -> Cliente? {
+        await MainActor.run {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
+        
+        guard let clienteId = cliente.id else {
+            await MainActor.run {
+                self.errorMessage = "No se puede actualizar un cliente sin ID"
+                self.isLoading = false
+            }
+            return nil
+        }
+        
+        do {
+            let encoder = JSONEncoder()
+            encoder.keyEncodingStrategy = .convertToSnakeCase
+            if let data = try? encoder.encode(cliente),
+               let json = String(data: data, encoding: .utf8) {
+                print("📤 JSON a actualizar: \(json)")
+            }
+            
+            let clienteActualizado: [Cliente] = try await SupabaseManager.shared.client
+                .from("clientes")
+                .update(cliente, returning: .representation)
+                .eq("id", value: clienteId)
+                .select()
+                .execute()
+                .value
+            
+            await fetchClientes()
+            return clienteActualizado.first
+            
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Error al actualizar el cliente: \(error.localizedDescription)"
+                self.isLoading = false
+            }
+            
+            return nil
+        }
     }
 }

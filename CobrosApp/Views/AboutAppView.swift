@@ -14,7 +14,7 @@ struct AboutAppView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 25) {
-                    Image(systemName: "dollarsign")
+                    Image("icon")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 100, height: 100)
@@ -72,7 +72,7 @@ struct AboutRow: View {
     var body: some View {
         HStack(spacing: 15) {
             Image(systemName: icon)
-                .foregroundStyle(.purple)
+                .foregroundStyle(.blue)
                 .frame(width: 30)
             
             VStack(alignment: .leading) {

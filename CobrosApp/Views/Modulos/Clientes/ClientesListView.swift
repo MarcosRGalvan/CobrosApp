@@ -125,8 +125,10 @@ private struct HCenterRow: View {
     }
 }
 
+
+
 #Preview {
     NavigationStack {
-        ClientesListView(path: .constant(NavigationPath()))  // ← preview con binding constante
+        
     }
 }

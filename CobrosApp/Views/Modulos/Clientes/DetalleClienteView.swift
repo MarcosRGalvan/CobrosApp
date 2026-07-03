@@ -9,8 +9,10 @@ import SwiftUI
 import MapKit
 
 struct DetalleClienteView: View {
-    let cliente: Cliente
+    @State private var cliente: Cliente
     @State private var viewModel: DetalleClienteViewModel
+    @Environment(AuthViewModel.self) private var auth
+    @State private var mostrarEdicion = false
     
     private var nombreCompleto: String {
         [cliente.nombre, cliente.appaterno, cliente.apmaterno]
@@ -19,7 +21,7 @@ struct DetalleClienteView: View {
     }
     
     init(cliente: Cliente) {
-        self.cliente = cliente
+        _cliente = State(initialValue: cliente)
         _viewModel = State(initialValue: DetalleClienteViewModel(cliente: cliente))
     }
     
@@ -116,6 +118,25 @@ struct DetalleClienteView: View {
         .navigationTitle("Detalle del Cliente")
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.cargarEstadisticas() }
+        .toolbar {
+            if auth.esAdmin {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        mostrarEdicion = true
+                    } label: {
+                        Image(systemName: "pencil")
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $mostrarEdicion) {
+            NavigationStack {
+                CrearClienteView(viewModel: ClienteViewModel(), cliente: cliente) { clienteActualizado in
+                    cliente = clienteActualizado
+                    mostrarEdicion = false
+                }
+            }
+        }
         .onAppear {
             if let coordenada {
                 cameraPosition = .region(
@@ -131,17 +152,19 @@ struct DetalleClienteView: View {
 
 #Preview {
     NavigationStack {
-        DetalleClienteView(
+        CrearClienteView(viewModel: ClienteViewModel())
+    }
+}
+
+#Preview("Editar") {
+    NavigationStack {
+        CrearClienteView(
+            viewModel: ClienteViewModel(),
             cliente: Cliente(
-                nombre: "Marco",
-                appaterno: "Ramirez",
-                apmaterno: "Galvan",
-                telefono: "4353453454",
-                direccion: "Calle Falsa 123",
-                email: "marco@email.com",
-                organizacionId: nil,
-                latitud: 20.5217,
-                longitud: -100.8157
+                nombre: "Marco", appaterno: "Ramirez", apmaterno: "Galvan",
+                telefono: "4353453454", direccion: "Calle Falsa 123",
+                email: "marco@email.com", organizacionId: nil,
+                latitud: 20.5217, longitud: -100.8157
             )
         )
     }

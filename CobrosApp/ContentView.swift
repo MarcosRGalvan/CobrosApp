@@ -86,7 +86,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("Hola, Bienvenido")
+            .navigationTitle("Hola, \(auth.usuarioActual?.nombre.components(separatedBy: " ").first ?? "Bienvenido")")
             .navigationDestination(for: HomeDestination.self) { destination in  // ← NUEVO
                 switch destination {
                 case .clientes:

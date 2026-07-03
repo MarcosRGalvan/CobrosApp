@@ -13,6 +13,8 @@ struct CrearClienteView: View {
     var viewModel: ClienteViewModel
     var onCreate: ((Cliente) -> Void)? = nil
     
+    private var clienteExistente: Cliente?
+    
     @State private var nombre: String = ""
     @State private var appaterno: String = ""
     @State private var apmaterno: String = ""
@@ -20,6 +22,25 @@ struct CrearClienteView: View {
     @State private var direccion: String = ""
     @State private var email: String = ""
     @State private var coordenada: CLLocationCoordinate2D?
+    
+    private var esEdicion: Bool { clienteExistente != nil }
+    
+    init(viewModel: ClienteViewModel, cliente: Cliente? = nil, onCreate: ((Cliente) -> Void)? = nil) {
+        self.viewModel = viewModel
+        self.onCreate = onCreate
+        self.clienteExistente = cliente
+        
+        // Precargar los campos si se esta editando
+        _nombre = State(initialValue: cliente?.nombre ?? "")
+        _appaterno = State(initialValue: cliente?.appaterno ?? "")
+        _apmaterno = State(initialValue: cliente?.apmaterno ?? "")
+        _telefono = State(initialValue: cliente?.telefono ?? "")
+        _direccion = State(initialValue: cliente?.direccion ?? "")
+        _email = State(initialValue: cliente?.email ?? "")
+        if let lat = cliente?.latitud, let lon = cliente?.longitud {
+            _coordenada = State(initialValue: CLLocationCoordinate2D(latitude: lat, longitude: lon))
+        }
+    }
     
     var body: some View {
         Form {
@@ -46,14 +67,14 @@ struct CrearClienteView: View {
                 UbicacionMapaView(coordenada: $coordenada)
             }
         }
-        .navigationTitle("Nuevo Cliente")
-        .interactiveDismissDisabled(viewModel.isLoading) // esto evita que el usuario haga el gesto de volver a la pantalla anterior
+        .navigationTitle(esEdicion ? "Editar Cliente" : "Nuevo Cliente")
+        .interactiveDismissDisabled(viewModel.isLoading)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 if viewModel.isLoading {
                     ProgressView()
                 } else {
-                    Button("Guardar") {
+                    Button(esEdicion ? "Guardar cambios" : "Guardar") {
                         Task {
                             await guardarCliente()
                         }
@@ -83,8 +104,8 @@ struct CrearClienteView: View {
         
         guard esValido else { return }
         
-        let nuevoCliente = Cliente(
-            id: nil,
+        let clienteAGuardar = Cliente(
+            id: clienteExistente?.id,
             nombre: nombre.trimmingCharacters(in: .whitespacesAndNewlines),
             appaterno: appaterno.trimmingCharacters(in: .whitespacesAndNewlines),
             apmaterno: apmaterno.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : apmaterno,
@@ -97,12 +118,19 @@ struct CrearClienteView: View {
 
         )
         
-        if let clienteCreado = await viewModel.crearCliente(nuevoCliente) {
-            if let callback = onCreate {
-                callback(clienteCreado)
-            } else {
-                dismiss()
-            }
+        let resultado: Cliente?
+        if esEdicion {
+            resultado = await viewModel.actualizarCliente(clienteAGuardar)
+        } else {
+            resultado = await viewModel.crearCliente(clienteAGuardar)
+        }
+        
+        guard let resultado else { return }
+
+        if let callback = onCreate {
+            callback(resultado)
+        } else {
+            dismiss()
         }
     }
 }
