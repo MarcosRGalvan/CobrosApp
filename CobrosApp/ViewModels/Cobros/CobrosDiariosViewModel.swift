@@ -8,9 +8,12 @@ class CobrosDiariosViewModel {
     var errorMessage: String?
     
     var textoBusqueda: String = ""
-    var mostrarSoloPendientes: Bool = false
+    var mostrarSoloPendientes: Bool = true
     
-    var cobrosFiltrados: [Pago] {
+    private let service = PagoService()
+    private var tareaActual: Task<Void, Never>?
+    
+    private var cobrosBase: [Pago] {
         var resultado = mostrarSoloPendientes
         ? cobros.filter { $0.fechaPago == nil }
         : cobros
@@ -23,8 +26,27 @@ class CobrosDiariosViewModel {
         return resultado
     }
     
-    private let service = PagoService()
-    private var tareaActual: Task<Void, Never>?
+    // Pagos cuya fecha de vencimiento ya pasó y siguen sin cobrarse
+    var cobrosAtrasados: [Pago] {
+        let hoy = Calendar.current.startOfDay(for: Date())
+        return cobrosBase.filter { pago in
+            guard let vencimiento = pago.fechaVencimiento else { return false }
+            return Calendar.current.startOfDay(for: vencimiento) < hoy
+        }
+    }
+    
+    // Pagos que vencen hoy
+    var cobrosDeHoy: [Pago] {
+        let hoy = Calendar.current.startOfDay(for: Date())
+        return cobrosBase.filter { pago in
+            guard let vencimiento = pago.fechaVencimiento else { return false }
+            return Calendar.current.startOfDay(for: vencimiento) == hoy
+        }
+    }
+    
+    var cobrosFiltrados: [Pago] {
+        cobrosBase
+    }
     
     func cargarCobrosDeHoy() {
         tareaActual?.cancel()

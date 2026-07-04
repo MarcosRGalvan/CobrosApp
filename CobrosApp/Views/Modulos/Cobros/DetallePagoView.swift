@@ -12,6 +12,8 @@ struct DetallePagoView: View {
     @State private var mostrarHistorial = false
     @State private var mostrarConfirmacionSinPago = false
     @Environment(\.dismiss) private var dismiss
+    @Environment(AuthViewModel.self) private var auth
+    @State private var modoEdicionAdmin = false
     
     init(pago: Pago, cliente: ClienteAnidado?) {
         _viewModel = State(initialValue: DetallePagoViewModel(pago: pago, cliente: cliente))
@@ -27,6 +29,10 @@ struct DetallePagoView: View {
 
     private var colorTintBotonSinPago: Color {
         viewModel.visitaSinPagoRegistrada ? .gray : .red
+    }
+    
+    private var camposDeshabilitados: Bool {
+        viewModel.yaPagado && !modoEdicionAdmin
     }
 
     var body: some View {
@@ -114,7 +120,7 @@ struct DetallePagoView: View {
                                 Text(forma.descripcion).tag(forma.id)
                             }
                         }
-                        .disabled(viewModel.yaPagado)
+                        .disabled(camposDeshabilitados)
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -126,7 +132,7 @@ struct DetallePagoView: View {
                         .multilineTextAlignment(.center)
                         .font(.title)
                         .bold()
-                        .disabled(viewModel.yaPagado)
+                        .disabled(camposDeshabilitados)
                     
                     VStack(spacing: 4) {
                         HStack {
@@ -153,19 +159,35 @@ struct DetallePagoView: View {
                     .foregroundStyle(.secondary)
                         
                     Button {
-                        Task { await viewModel.registrarPago() }
+                        Task {
+                            if viewModel.isGuardando {
+                                await viewModel.actualizarPago()
+                            } else {
+                                await viewModel.registrarPago()
+                            }
+                        }
                     } label: {
                         if viewModel.isGuardando {
                             ProgressView().frame(maxWidth: .infinity)
                         } else {
-                            Text(viewModel.yaPagado ? "Pago Registrado" : "Registrar Pago")
+                            Text(modoEdicionAdmin ? "Guardar correción" : (viewModel.yaPagado ? "Pago Registrado" : "Registrar Pago"))
                                 .frame(maxWidth: .infinity)
                         }
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
-                    .disabled(viewModel.isGuardando || viewModel.yaPagado)
+                    .disabled(viewModel.isGuardando || camposDeshabilitados)
                     .tint(viewModel.yaPagado ? .gray : .blue)
+                    
+                    if auth.esAdmin && viewModel.yaPagado {
+                        Button {
+                            modoEdicionAdmin.toggle()
+                        } label: {
+                            Text(modoEdicionAdmin ? "Cancelar edición" : "Editar pago (admin)")
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.orange)
+                    }
                     
                     HStack {
                         Button {
@@ -254,7 +276,7 @@ struct DetallePagoView: View {
 
 #Preview {
     DetallePagoView(
-        pago: Pago(id: 45, prestamoId: 22, fechaPago: nil, montoPagado: 500, abonoCapital: 0, pagoIntereses: 0, recargos: 0, numeroCuota: 3, fechaVencimiento: nil, referenciaPago: "", formaPagoId: nil, prestamos: nil, organizacionId: nil, fechaVisitaSinPago: nil),
+        pago: Pago(id: 45, prestamoId: 22, fechaPago: nil, montoPagado: 500, abonoCapital: 0, pagoIntereses: 0, recargos: 0, numeroCuota: 3, fechaVencimiento: nil, referenciaPago: "", formaPagoId: nil, prestamos: nil, organizacionId: nil, fechaVisitaSinPago: nil, cobradorId: nil),
             
             cliente: ClienteAnidado(nombre: "Marco", appaterno: "Ramirez", apmaterno: "Galvan", telefono: "4353453454", direccion: "Calle Falsa 123", email: "marco@email.com")
         )

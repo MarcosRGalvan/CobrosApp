@@ -22,6 +22,7 @@ struct Pago: Identifiable, Codable, Hashable {
     let prestamos: PrestamoAnidado?
     let organizacionId: UUID?
     let fechaVisitaSinPago: Date?
+    let cobradorId: UUID?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -38,6 +39,7 @@ struct Pago: Identifiable, Codable, Hashable {
         case prestamos = "prestamos"
         case organizacionId = "organizacion_id"
         case fechaVisitaSinPago = "fecha_visita_sin_pago"
+        case cobradorId = "cobrador_id"
     }
 
     var nombreCliente: String {

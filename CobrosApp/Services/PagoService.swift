@@ -426,6 +426,36 @@ class PagoService {
         decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode([Pago].self, from: response.data)
     }
+    
+    // Corrige un pago ya registrado (solo admin) sin alterar la fecha original
+    func actualizarPagoExistente(
+        pagoId: Int,
+        fechaPagoOriginal: Date,
+        monto: Double,
+        formaPagoId: Int,
+        abonoCapital: Double,
+        abonoIntereses: Double,
+        recargos: Double,
+        cobradorIdOriginal: String
+    ) async throws {
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone.current
+        let payload = ActualizarPago(
+            fechaPago: formatter.string(from: fechaPagoOriginal),
+            montoPagado: monto,
+            formaPagoId: formaPagoId,
+            abonoCapital: abonoCapital,
+            pagoIntereses: abonoIntereses,
+            recargos: recargos,
+            cobradorId: cobradorIdOriginal
+        )
+        
+        try await supabase
+            .from("pagos")
+            .update(payload)
+            .eq("id", value: pagoId)
+            .execute()
+    }
 }
 
 extension Double {

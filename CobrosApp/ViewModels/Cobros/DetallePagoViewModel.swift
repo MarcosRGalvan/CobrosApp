@@ -25,6 +25,7 @@ class DetallePagoViewModel {
     var mostrarAlertaUltimoPago = false
     var prestamoFinalizado = false
     var visitaSinPagoRegistrada: Bool
+    var pagoActualizadoExitosamente = false
 
     var isLoadingFormasPago: Bool { formasPagoViewModel.isLoading }
     var formasPago: [FormaPago] { formasPagoViewModel.formasPago.filter { $0.activo }}
@@ -154,5 +155,49 @@ class DetallePagoViewModel {
     
     func continuarSinFinalizar() {
         pagoRegistradoExitosamente = true
+    }
+    
+    func actualizarPago() async {
+        guard let pagoId = pago.id else {
+            errorMessage = "Este pago no tiene un ID válido"
+            return
+        }
+        guard let monto = Double(montoIngresado), monto > 0 else {
+            errorMessage = "Ingresa un monto válido"
+            return
+        }
+        
+        guard let formaPagoId = formaPagoSeleccionada else {
+            errorMessage = "Selecciona una forma de pago"
+            return
+        }
+        guard monto >= pagoIntereses + recargos else {
+            let minimo = (pagoIntereses + recargos).formatted(.currency(code: "MXN"))
+            errorMessage = "El monto debe cubrir al menos los intereses\(estaVencido ? " y el recargo" : "") (\(minimo))"
+            return
+        }
+        guard let fechaOriginal = pago.fechaPago else {
+            errorMessage = "Este pago no tiene fecha registrada"
+            return
+        }
+        
+        isGuardando = true
+        do {
+            try await pagoService.actualizarPagoExistente(
+                pagoId: pagoId,
+                fechaPagoOriginal: fechaOriginal,
+                monto: monto,
+                formaPagoId: formaPagoId,
+                abonoCapital: abonoCapital,
+                abonoIntereses: abonoCapital,
+                recargos: recargos,
+                cobradorIdOriginal: pago.cobradorId?.uuidString ?? ""
+            )
+            isGuardando = false
+            pagoActualizadoExitosamente = true
+        } catch {
+            errorMessage = "No se pudo actualizar el pago: \(error.localizedDescription)"
+            isGuardando = false
+        }
     }
 }

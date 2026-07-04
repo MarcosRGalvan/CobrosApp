@@ -10,7 +10,6 @@ import SwiftUI
 struct CobrosDiariosView: View {
     @State private var viewModel = CobrosDiariosViewModel()
     @State private var pagoSeleccionado: Pago? = nil
-    
 
     var body: some View {
         Group {
@@ -22,23 +21,10 @@ struct CobrosDiariosView: View {
                     systemImage: "checkmark.seal.fill",
                     description: Text("No hay pagos que vencen hoy.")
                 )
-            } else if viewModel.cobrosFiltrados.isEmpty {
+            } else if viewModel.cobrosAtrasados.isEmpty && viewModel.cobrosDeHoy.isEmpty {
                 ContentUnavailableView.search(text: viewModel.textoBusqueda)
             } else {
-                List {
-                    ForEach(viewModel.cobrosFiltrados) { pago in
-                        Button {
-                            pagoSeleccionado = pago
-                        } label: {
-                            CobroDiarioRow(pago: pago)
-                        }
-                        .buttonStyle(.plain)
-                        .listRowInsets(EdgeInsets())
-                    }
-                }
-                .navigationDestination(item: $pagoSeleccionado) { pago in
-                    DetallePagoView(pago: pago, cliente: pago.prestamos?.clientes)
-                }
+                listaDeCobros
             }
         }
         .navigationTitle("Cobros Pendientes")
@@ -66,6 +52,43 @@ struct CobrosDiariosView: View {
             Text(viewModel.errorMessage ?? "")
         }
     }
+    
+    // Extraído del body para ayudar al type-checker
+    private var listaDeCobros: some View {
+        List {
+            if !viewModel.cobrosDeHoy.isEmpty {
+                seccionCobros(titulo: "Vencen hoy", pagos: viewModel.cobrosDeHoy, esAtrasados: false)
+            }
+            if !viewModel.cobrosAtrasados.isEmpty {
+                seccionCobros(titulo: "Atrasados", pagos: viewModel.cobrosAtrasados, esAtrasados: true)
+            }
+        }
+        .navigationDestination(item: $pagoSeleccionado) { pago in
+            DetallePagoView(pago: pago, cliente: pago.prestamos?.clientes)
+        }
+    }
+    
+    @ViewBuilder
+    private func seccionCobros(titulo: String, pagos: [Pago], esAtrasados: Bool) -> some View {
+        Section {
+            ForEach(pagos) { pago in
+                Button {
+                    pagoSeleccionado = pago
+                } label: {
+                    CobroDiarioRow(pago: pago)
+                }
+                .buttonStyle(.plain)
+                .listRowInsets(EdgeInsets())
+            }
+        } header: {
+            if esAtrasados {
+                Label(titulo, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.red)
+            } else {
+                Text(titulo)
+            }
+        }
+    }
 }
 
 struct CobroDiarioRow: View {
@@ -79,6 +102,13 @@ struct CobroDiarioRow: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd/MM/yyyy"
         return formatter
+    }
+    
+    private var diasAtraso: Int? {
+        guard let vencimiento = pago.fechaVencimiento, pago.fechaPago == nil else { return nil }
+        let hoy = Calendar.current.startOfDay(for: Date())
+        let dias = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: vencimiento), to: hoy).day ?? 0
+        return dias > 0 ? dias : nil
     }
 
     var body: some View {
@@ -101,6 +131,12 @@ struct CobroDiarioRow: View {
                             .font(.subheadline)
                             .bold()
                             .foregroundStyle(.orange)
+                    }
+                    if let dias = diasAtraso {
+                        Text("\(dias) día\(dias == 1 ? "" : "s") de atraso")
+                            .font(.caption)
+                            .bold()
+                            .foregroundStyle(.red)
                     }
                     Text("Total pago: \(pago.montoPagado, format: .currency(code: "MXN"))")
                         .font(.body)
