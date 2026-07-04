@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Prestamo: Identifiable, Codable {
+struct Prestamo: Identifiable, Codable, Hashable {
     var id: Int?
     var clienteId: Int
     var montoPrestado: Double
@@ -36,7 +36,7 @@ struct Prestamo: Identifiable, Codable {
     
     var nombreCompletoCliente: String {
         if let cliente = cliente {
-            return "\(cliente.nombre) \(cliente.apmaterno ?? "") \(cliente.apmaterno ?? "")"
+            return "\(cliente.nombre) \(cliente.appaterno) \(cliente.apmaterno ?? "")"
         }
         return "Cargando cliente..."
     }

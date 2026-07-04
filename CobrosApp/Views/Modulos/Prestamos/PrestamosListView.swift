@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+enum PrestamoDestino: Hashable {
+    case detallePrestamo(Prestamo)
+}
+
 struct PrestamosListView: View {
     @Binding var path: NavigationPath
     @State private var viewModel = PrestamoViewModel()
@@ -40,7 +44,9 @@ struct PrestamosListView: View {
                 )
             } else {
                 List(viewModel.prestamosFiltrados) { prestamo in
-                    PrestamoRowView(prestamo: prestamo)
+                    NavigationLink(value: PrestamoDestino.detallePrestamo(prestamo)) {
+                        PrestamoRowView(prestamo: prestamo)
+                    }
                 }
                 .refreshable {
                     await viewModel.fetchPrestamos()
@@ -56,6 +62,12 @@ struct PrestamosListView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
+            }
+        }
+        .navigationDestination(for: PrestamoDestino.self) { destino in
+            switch destino {
+            case .detallePrestamo(let prestamo):
+                DetallePrestamoView(prestamo: prestamo)
             }
         }
         .task(id: viewModel.prestamos.isEmpty) {
