@@ -142,7 +142,7 @@ struct DetallePagoView: View {
                         }
                         if viewModel.estaVencido {
                             HStack {
-                                Text("Recargo (10%):")
+                                Text("Recargo")
                                     .foregroundStyle(.red)
                                 Spacer()
                                 Text(viewModel.recargos, format: .currency(code: "MXN"))
@@ -179,16 +179,6 @@ struct DetallePagoView: View {
                     .disabled(viewModel.isGuardando || camposDeshabilitados)
                     .tint(viewModel.yaPagado ? .gray : .blue)
                     
-                    if auth.esAdmin && viewModel.yaPagado {
-                        Button {
-                            modoEdicionAdmin.toggle()
-                        } label: {
-                            Text(modoEdicionAdmin ? "Cancelar edición" : "Editar pago (admin)")
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(.orange)
-                    }
-                    
                     HStack {
                         Button {
                             mostrarHistorial = true
@@ -212,6 +202,26 @@ struct DetallePagoView: View {
                         .tint(colorTintBotonSinPago)
                         .disabled(viewModel.yaPagado || viewModel.visitaSinPagoRegistrada || viewModel.isRegistrandoVisita)
                     }
+                    
+                    if auth.esAdmin && viewModel.yaPagado {
+                        HStack {
+                            Button {
+                                modoEdicionAdmin.toggle()
+                            } label: {
+                                Text(modoEdicionAdmin ? "Cancelar edición" : "Editar pago")
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.orange)
+                            
+                            Button {
+                                viewModel.mostrarConfirmacionRevertir = true
+                            } label: {
+                                Text("Revertir Pago")
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.red)
+                        }
+                    }
                 }
             }
         }
@@ -232,6 +242,9 @@ struct DetallePagoView: View {
         .task { await viewModel.cargarDatosIniciales() }
         .onChange(of: viewModel.pagoRegistradoExitosamente) { _, exitoso in
             if exitoso { dismiss() }
+        }
+        .onChange(of: viewModel.pagoRevertido) { _, revertido in
+            if revertido { dismiss() }
         }
         .alert(
             "Error",
@@ -271,9 +284,24 @@ struct DetallePagoView: View {
         } message: {
             Text("¿Confirmas que visitaste al cliente hoy y no realizó su pago?")
         }
+        .alert(
+            "Revertir Pago",
+            isPresented: Binding(
+                get: { viewModel.mostrarConfirmacionRevertir },
+                set: { viewModel.mostrarConfirmacionRevertir = $0 }
+            )
+        ) {
+            Button("Revertir", role: .destructive) {
+                Task { await viewModel.revertirPago() }
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("¿Estas seguro? Los datos del pago se borrarán y la cuota quedará pendiente de nuevo.")
+        }
     }
 }
 
+/*
 #Preview {
     DetallePagoView(
         pago: Pago(id: 45, prestamoId: 22, fechaPago: nil, montoPagado: 500, abonoCapital: 0, pagoIntereses: 0, recargos: 0, numeroCuota: 3, fechaVencimiento: nil, referenciaPago: "", formaPagoId: nil, prestamos: nil, organizacionId: nil, fechaVisitaSinPago: nil, cobradorId: nil),
@@ -281,3 +309,4 @@ struct DetallePagoView: View {
             cliente: ClienteAnidado(nombre: "Marco", appaterno: "Ramirez", apmaterno: "Galvan", telefono: "4353453454", direccion: "Calle Falsa 123", email: "marco@email.com")
         )
 }
+*/

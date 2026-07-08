@@ -12,7 +12,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		5DBF2A602FBD3BDA00294A55 /* CobrosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CobrosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DBF2A602FBD3BDA00294A55 /* CobrosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = CobrosApp.app; path = "/Users/marcoramirez/Documents/Desarrollo/Apps iOS/CobrosApp/build/Debug-iphoneos/CobrosApp.app"; sourceTree = "<absolute>"; };
 		5DEC27292FF5B268003B2734 /* CobrosAppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = CobrosAppIcon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -40,25 +40,8 @@
 			isa = PBXGroup;
 			children = (
 				5DBF2A622FBD3BDA00294A55 /* CobrosApp */,
-				5DBF2B0B2FBD74FD00294A55 /* Frameworks */,
-				5DBF2A612FBD3BDA00294A55 /* Products */,
 				5DEC27292FF5B268003B2734 /* CobrosAppIcon.icon */,
 			);
-			sourceTree = "<group>";
-		};
-		5DBF2A612FBD3BDA00294A55 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				5DBF2A602FBD3BDA00294A55 /* CobrosApp.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5DBF2B0B2FBD74FD00294A55 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -115,7 +98,7 @@
 				5DBF2AF32FBD603E00294A55 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 5DBF2A612FBD3BDA00294A55 /* Products */;
+			productRefGroup = 5DBF2A572FBD3BDA00294A55;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (

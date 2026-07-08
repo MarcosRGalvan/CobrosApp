@@ -45,8 +45,8 @@ class PagoService {
         prestamo: Prestamo,
         frecuencia: FrecuenciaPag
     ) async throws {
-        print("diasIntervalo recibido: \(frecuencia.diasIntervalo)")
-        print("fechaPrestamo: \(prestamo.fechaPrestamo)")
+        //print("diasIntervalo recibido: \(frecuencia.diasIntervalo)")
+        //print("fechaPrestamo: \(prestamo.fechaPrestamo)")
 
         guard frecuencia.diasIntervalo > 0, prestamo.cuotas > 0 else { return }
         guard let orgId = prestamo.organizacionId else {
@@ -130,18 +130,18 @@ class PagoService {
             //.is("fecha_pago", value: nil)
             .execute()
 
-        print(
+        /* print(
             "📦 Raw response: \(String(data: response.data, encoding: .utf8) ?? "nil")"
-        )
+        ) */
 
         do {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let pagos = try decoder.decode([Pago].self, from: response.data)
-            print("✅ Decode exitoso: \(pagos.count) pagos")
+            //print("✅ Decode exitoso: \(pagos.count) pagos")
             return pagos
         } catch {
-            print("❌ Error de decode: \(error)")
+            //print("❌ Error de decode: \(error)")
             throw error
         }
     }
@@ -453,6 +453,24 @@ class PagoService {
         try await supabase
             .from("pagos")
             .update(payload)
+            .eq("id", value: pagoId)
+            .execute()
+    }
+    
+    // Revertir pago a su estado inicial en caso de equivocación del cobrador
+    // Vuelve a dejar el pago en pendiente por cobrar
+    func revertirPago(pagoId: Int) async throws {
+        try await supabase
+            .from("pagos")
+            .update([
+                "fecha_pago": AnyJSON.null,
+                "forma_pago_id": AnyJSON.null,
+                "abono_capital": AnyJSON.null,
+                "pago_intereses": AnyJSON.null,
+                "recargos": AnyJSON.null,
+                "cobrador_id": AnyJSON.null,
+                "fecha_visita_sin_pago": AnyJSON.null
+            ])
             .eq("id", value: pagoId)
             .execute()
     }
