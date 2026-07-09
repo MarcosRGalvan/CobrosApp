@@ -139,18 +139,14 @@ class DetallePagoViewModel {
         }
     }
     
-    func registrarVisitaSinPago() async {
-        guard let pagoId = pago.id else {
-            errorMessage = "Este pago no tiene un ID válido"
-            return
-        }
-
+    func registrarSinPago() async {
+        guard let pagoId = pago.id else { return }
         isRegistrandoVisita = true
         do {
-            try await pagoService.registrarVisitaSinPago(pagoId: pagoId)
-            visitaSinPagoRegistrada = true
+            try await pagoService.marcarSinPago(pagoId: pagoId)
+            pagoRegistradoExitosamente = true  // cierra la vista y lo quita del listado
         } catch {
-            errorMessage = "No se pudo registrar la visita: \(error.localizedDescription)"
+            errorMessage = "No se pudo registrar: \(error.localizedDescription)"
         }
         isRegistrandoVisita = false
     }

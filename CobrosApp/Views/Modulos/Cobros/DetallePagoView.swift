@@ -278,7 +278,7 @@ struct DetallePagoView: View {
             isPresented: $mostrarConfirmacionSinPago
         ) {
             Button("Confirmar", role: .destructive) {
-                Task { await viewModel.registrarVisitaSinPago() }
+                Task { await viewModel.registrarSinPago() }
             }
             Button("Cancelar", role: .cancel) {}
         } message: {

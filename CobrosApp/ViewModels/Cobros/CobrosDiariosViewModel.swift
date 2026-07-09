@@ -4,29 +4,25 @@ import Foundation
 @MainActor
 class CobrosDiariosViewModel {
     var cobros: [Pago] = []
+    var cobrosPageados: [Pago] = []
+    var cobrosSinPagar: [Pago] = []
     var isLoading = false
     var errorMessage: String?
-    
     var textoBusqueda: String = ""
     var mostrarSoloPendientes: Bool = true
     
     private let service = PagoService()
     private var tareaActual: Task<Void, Never>?
     
+    // MARK: - Pendientes filtrados
+    
     private var cobrosBase: [Pago] {
-        var resultado = mostrarSoloPendientes
-        ? cobros.filter { $0.fechaPago == nil }
-        : cobros
-        
-        if !textoBusqueda.isEmpty {
-            resultado = resultado.filter {
-                $0.nombreCliente.lowercased().contains(textoBusqueda.lowercased())
-            }
+        guard !textoBusqueda.isEmpty else { return cobros }
+        return cobros.filter {
+            $0.nombreCliente.lowercased().contains(textoBusqueda.lowercased())
         }
-        return resultado
     }
     
-    // Pagos cuya fecha de vencimiento ya pasó y siguen sin cobrarse
     var cobrosAtrasados: [Pago] {
         let hoy = Calendar.current.startOfDay(for: Date())
         return cobrosBase.filter { pago in
@@ -35,7 +31,6 @@ class CobrosDiariosViewModel {
         }
     }
     
-    // Pagos que vencen hoy
     var cobrosDeHoy: [Pago] {
         let hoy = Calendar.current.startOfDay(for: Date())
         return cobrosBase.filter { pago in
@@ -44,20 +39,43 @@ class CobrosDiariosViewModel {
         }
     }
     
-    var cobrosFiltrados: [Pago] {
-        cobrosBase
+    // MARK: - Pagados filtrados
+    
+    var cobrosPagadosFiltrados: [Pago] {
+        guard !textoBusqueda.isEmpty else { return cobrosPageados }
+        return cobrosPageados.filter {
+            $0.nombreCliente.lowercased().contains(textoBusqueda.lowercased())
+        }
     }
+    
+    // MARK: - Sin pagar filtrados
+    
+    var cobrosSinPagarFiltrados: [Pago] {
+        guard !textoBusqueda.isEmpty else { return cobrosSinPagar }
+        return cobrosSinPagar.filter {
+            $0.nombreCliente.lowercased().contains(textoBusqueda.lowercased())
+        }
+    }
+    
+    // MARK: - Carga
     
     func cargarCobrosDeHoy() {
         tareaActual?.cancel()
         tareaActual = Task {
             await MainActor.run { isLoading = true }
             do {
-                let resultado = try await service.fetchCobrosDiarios()
+                async let pendientes = service.fetchCobrosDiarios()
+                async let pagados = service.fetchCobrosDelDiaPorEstado(estado: "pagado")
+                async let sinPagar = service.fetchCobrosDelDiaPorEstado(estado: "sin_pagar")
+                
+                let (p, pg, sp) = try await (pendientes, pagados, sinPagar)
+                
                 await MainActor.run {
-                    cobros = resultado
+                    cobros = p
+                    cobrosPageados = pg
+                    cobrosSinPagar = sp
                     isLoading = false
-                    print("✅ isLoading: \(isLoading), cobros: \(cobros.count)")
+                    print("✅ Pendientes: \(p.count), Pagados: \(pg.count), Sin pagar: \(sp.count)")
                 }
             } catch is CancellationError {
                 print("⚠️ Cancelado")

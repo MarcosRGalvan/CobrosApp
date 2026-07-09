@@ -10,36 +10,39 @@ import SwiftUI
 struct CobrosDiariosView: View {
     @State private var viewModel = CobrosDiariosViewModel()
     @State private var pagoSeleccionado: Pago? = nil
-
+    @State private var tabSeleccionada = 0
+    
     var body: some View {
-        Group {
+        VStack(spacing: 10) {
+            Picker("", selection: $tabSeleccionada) {
+                Text("Pendientes (\(viewModel.cobros.count))").tag(0)
+                Text("Pagados (\(viewModel.cobrosPageados.count))").tag(1)
+                Text("Sin pagar (\(viewModel.cobrosSinPagar.count))").tag(2)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            
             if viewModel.isLoading {
-                ProgressView("Cargando cobros de hoy...")
-            } else if viewModel.cobros.isEmpty {
-                ContentUnavailableView(
-                    "Sin cobros pendientes",
-                    systemImage: "checkmark.seal.fill",
-                    description: Text("No hay pagos que vencen hoy.")
-                )
-            } else if viewModel.cobrosAtrasados.isEmpty && viewModel.cobrosDeHoy.isEmpty {
-                ContentUnavailableView.search(text: viewModel.textoBusqueda)
+                Spacer()
+                ProgressView("Cargando cobros...")
+                Spacer()
             } else {
-                listaDeCobros
-            }
-        }
-        .navigationTitle("Cobros Pendientes")
-        .searchable(text: $viewModel.textoBusqueda, prompt: "Buscar cliente...")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Toggle(isOn: $viewModel.mostrarSoloPendientes) {
-                    Text("Solo Pendientes")
-                        .font(.caption)
+                TabView(selection: $tabSeleccionada) {
+                    pendientesTab.tag(0)
+                    pagadosTab.tag(1)
+                    sinPagarTab.tag(2)
                 }
-                .toggleStyle(.switch)
+                .tabViewStyle(.page(indexDisplayMode: .never))
             }
         }
+        .navigationTitle("Cobros del Día")
+        .searchable(text: $viewModel.textoBusqueda, prompt: "Buscar cliente...")
         .onAppear { viewModel.cargarCobrosDeHoy() }
         .refreshable { viewModel.cargarCobrosDeHoy() }
+        .navigationDestination(item: $pagoSeleccionado) { pago in
+            DetallePagoView(pago: pago, cliente: pago.prestamos?.clientes)
+        }
         .alert(
             "Error",
             isPresented: Binding(
@@ -53,35 +56,103 @@ struct CobrosDiariosView: View {
         }
     }
     
-    // Extraído del body para ayudar al type-checker
-    private var listaDeCobros: some View {
-        List {
-            if !viewModel.cobrosDeHoy.isEmpty {
-                seccionCobros(titulo: "Vencen hoy", pagos: viewModel.cobrosDeHoy, esAtrasados: false)
+    // MARK: - Tabs
+    
+    private var pendientesTab: some View {
+        Group {
+            if viewModel.cobros.isEmpty {
+                ContentUnavailableView(
+                    "Sin cobros pendientes",
+                    systemImage: "checkmark.seal.fill",
+                    description: Text("No hay pagos pendientes por hoy.")
+                )
+            } else if viewModel.cobrosDeHoy.isEmpty && viewModel.cobrosAtrasados.isEmpty {
+                ContentUnavailableView.search(text: viewModel.textoBusqueda)
+            } else {
+                List {
+                    if !viewModel.cobrosDeHoy.isEmpty {
+                        seccionCobros(
+                            titulo: "Vencen hoy",
+                            pagos: viewModel.cobrosDeHoy,
+                            esAtrasado: false
+                        )
+                    }
+                    if !viewModel.cobrosAtrasados.isEmpty {
+                        seccionCobros(
+                            titulo: "Atrasados",
+                            pagos: viewModel.cobrosAtrasados,
+                            esAtrasado: true
+                        )
+                    }
+                }
             }
-            if !viewModel.cobrosAtrasados.isEmpty {
-                seccionCobros(titulo: "Atrasados", pagos: viewModel.cobrosAtrasados, esAtrasados: true)
-            }
-        }
-        .navigationDestination(item: $pagoSeleccionado) { pago in
-            DetallePagoView(pago: pago, cliente: pago.prestamos?.clientes)
         }
     }
     
+    private var pagadosTab: some View {
+        Group {
+            if viewModel.cobrosPagadosFiltrados.isEmpty {
+                ContentUnavailableView(
+                    "Sin pagos registrados",
+                    systemImage: "dollarsign.circle",
+                    description: Text("Aún no se han registrado pagos hoy.")
+                )
+            } else {
+                List {
+                    ForEach(viewModel.cobrosPagadosFiltrados) { pago in
+                        Button {
+                            pagoSeleccionado = pago
+                        } label: {
+                            CobroDiariosRow(pago: pago)
+                        }
+                        .buttonStyle(.plain)
+                        .listRowInsets(EdgeInsets())
+                    }
+                }
+            }
+        }
+    }
+    
+    private var sinPagarTab: some View {
+        Group {
+            if viewModel.cobrosSinPagarFiltrados.isEmpty {
+                ContentUnavailableView(
+                    "Sin incidencias",
+                    systemImage: "hand.thumbsup.fill",
+                    description: Text("No hay clientes registrados sin pago hoy.")
+                )
+            } else {
+                List {
+                    ForEach(viewModel.cobrosSinPagarFiltrados) { pago in
+                        Button {
+                            pagoSeleccionado = pago
+                        } label: {
+                            CobroDiariosRow(pago: pago)
+                        }
+                        .buttonStyle(.plain)
+                        .listRowInsets(EdgeInsets())
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Helpers
+    
     @ViewBuilder
-    private func seccionCobros(titulo: String, pagos: [Pago], esAtrasados: Bool) -> some View {
+    private func seccionCobros(titulo: String, pagos: [Pago], esAtrasado: Bool) -> some View {
         Section {
             ForEach(pagos) { pago in
                 Button {
                     pagoSeleccionado = pago
                 } label: {
-                    CobroDiarioRow(pago: pago)
+                    CobroDiariosRow(pago: pago)
                 }
                 .buttonStyle(.plain)
                 .listRowInsets(EdgeInsets())
             }
         } header: {
-            if esAtrasados {
+            if esAtrasado {
                 Label(titulo, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(.red)
             } else {
@@ -91,13 +162,11 @@ struct CobrosDiariosView: View {
     }
 }
 
-struct CobroDiarioRow: View {
+// MARK: - Row
+
+struct CobroDiariosRow: View {
     let pago: Pago
-
-    private var yaCobrado: Bool {
-        pago.fechaPago != nil
-    }
-
+    
     private var uiDateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd/MM/yyyy"
@@ -105,12 +174,17 @@ struct CobroDiarioRow: View {
     }
     
     private var diasAtraso: Int? {
-        guard let vencimiento = pago.fechaVencimiento, pago.fechaPago == nil else { return nil }
+        guard let vencimiento = pago.fechaVencimiento,
+              pago.fechaPago == nil else { return nil }
         let hoy = Calendar.current.startOfDay(for: Date())
-        let dias = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: vencimiento), to: hoy).day ?? 0
+        let dias = Calendar.current.dateComponents(
+            [.day],
+            from: Calendar.current.startOfDay(for: vencimiento),
+            to: hoy
+        ).day ?? 0
         return dias > 0 ? dias : nil
     }
-
+    
     var body: some View {
         HStack(spacing: 0) {
             HStack(alignment: .center, spacing: 12) {
@@ -122,7 +196,7 @@ struct CobroDiarioRow: View {
                         .font(.title3)
                         .bold()
                     if let cuota = pago.numeroCuota {
-                        Text("Pago:\(cuota)")
+                        Text("Pago: \(cuota)")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -147,11 +221,12 @@ struct CobroDiarioRow: View {
             .padding(.vertical, 4)
             .padding(.leading, 15)
             .frame(maxWidth: .infinity, alignment: .leading)
-
+            
             Divider()
-
+            
             VStack(spacing: 4) {
-                if yaCobrado {
+                switch pago.estado {
+                case .pagado:
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.white)
                         .font(.title3)
@@ -159,11 +234,19 @@ struct CobroDiarioRow: View {
                         .font(.caption)
                         .bold()
                         .foregroundStyle(.white)
-                } else {
+                case .pendiente:
+                    Image(systemName: "clock.fill")
+                        .foregroundStyle(.white)
+                        .font(.title3)
+                    Text("Pendiente")
+                        .font(.caption)
+                        .bold()
+                        .foregroundStyle(.white)
+                default:
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.white)
                         .font(.title3)
-                    Text("Sin pago")
+                    Text("Sin pagar")
                         .font(.caption)
                         .bold()
                         .foregroundStyle(.white)
@@ -171,12 +254,18 @@ struct CobroDiarioRow: View {
             }
             .frame(width: 90)
             .frame(maxHeight: .infinity)
-            .background(yaCobrado ? Color.green : Color.red)
+            .background(
+                pago.estado == .pagado ? Color.green :
+                    pago.estado == .pendiente ? Color.orange :
+                    Color.red
+            )
         }
         .frame(height: 110)
     }
 }
 
 #Preview {
-    CobrosDiariosView()
+    NavigationStack {
+        CobrosDiariosView()
+    }
 }

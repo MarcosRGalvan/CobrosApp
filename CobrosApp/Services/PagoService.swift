@@ -16,6 +16,7 @@ struct ActualizarPago: Encodable {
     let pagoIntereses: Double
     let recargos: Double
     let cobradorId: String
+    let estado: String = "pagado"
 
     enum CodingKeys: String, CodingKey {
         case fechaPago = "fecha_pago"
@@ -25,6 +26,7 @@ struct ActualizarPago: Encodable {
         case pagoIntereses = "pago_intereses"
         case recargos
         case cobradorId = "cobrador_id"
+        case estado
     }
 }
 
@@ -34,6 +36,7 @@ struct PagoInsert: Encodable {
     let numero_cuota: Int
     let fecha_vencimiento: String
     let organizacion_id: UUID
+    let estado: String = "pendiente"
 }
 
 class PagoService {
@@ -127,7 +130,7 @@ class PagoService {
                 """
             )
             .lt("fecha_vencimiento", value: hasta)
-            //.is("fecha_pago", value: nil)
+            .eq("estado", value: "pendiente")
             .execute()
 
         /* print(
@@ -183,21 +186,13 @@ class PagoService {
     }
 
     // Marca que el cobrador visitó al cliente pero no hubo pago
-    func registrarVisitaSinPago(pagoId: Int) async throws {
-        struct VisitaSinPago: Encodable {
-            let fechaVisitaSinPago: String
-            enum CodingKeys: String, CodingKey {
-                case fechaVisitaSinPago = "fecha_visita_sin_pago"
-            }
-        }
-
-        let formatter = ISO8601DateFormatter()
-        formatter.timeZone = TimeZone.current
-        let payload = VisitaSinPago(fechaVisitaSinPago: formatter.string(from: Date()))
-
+    func marcarSinPago(pagoId: Int) async throws {
         try await supabase
             .from("pagos")
-            .update(payload)
+            .update([
+                "estado": AnyJSON.string("sin_pagar"),
+                "fecha_visita_sin_pago": AnyJSON.null
+            ])
             .eq("id", value: pagoId)
             .execute()
     }
@@ -413,6 +408,42 @@ class PagoService {
         return (Double(aTiempo) / Double(totalCount)) * 100
     }
     
+    func fetchCobrosDelDiaPorEstado(estado: String) async throws -> [Pago] {
+        let hoy = Calendar.current.startOfDay(for: Date())
+        let manana = Calendar.current.date(byAdding: .day, value: 1, to: hoy)!
+        let formatter = ISO8601DateFormatter()
+        let desde = formatter.string(from: hoy)
+        let hasta = formatter.string(from: manana)
+        
+        let response = try await supabase
+            .from("pagos")
+            .select("""
+                *,
+                prestamos (
+                    prestamo_id,
+                    monto_prestado,
+                    cuotas,
+                    interes_porciento,
+                    clientes (
+                        nombre,
+                        appaterno,
+                        apmaterno,
+                        telefono,
+                        direccion,
+                        email
+                    )
+                )
+            """)
+            .gte("fecha_vencimiento", value: desde)
+            .lt("fecha_vencimiento", value: hasta)
+            .eq("estado", value: estado)
+            .execute()
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode([Pago].self, from: response.data)
+    }
+    
     
     func fetchHistorialPagos(prestamoId: Int) async throws -> [Pago] {
         let response = try await supabase
@@ -469,7 +500,8 @@ class PagoService {
                 "pago_intereses": AnyJSON.null,
                 "recargos": AnyJSON.null,
                 "cobrador_id": AnyJSON.null,
-                "fecha_visita_sin_pago": AnyJSON.null
+                "fecha_visita_sin_pago": AnyJSON.null,
+                "estado": AnyJSON.string("pendiente")  // ← vuelve a pendiente
             ])
             .eq("id", value: pagoId)
             .execute()

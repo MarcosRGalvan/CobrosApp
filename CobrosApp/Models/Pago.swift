@@ -7,6 +7,12 @@
 
 import Foundation
 
+enum EstadoPago: String, Codable {
+    case sinPagar = "sin_pagar"
+    case pendiente = "pendiente"
+    case pagado = "pagado"
+}
+
 struct Pago: Identifiable, Codable, Hashable {
     let id: Int?
     let prestamoId: Int
@@ -23,6 +29,7 @@ struct Pago: Identifiable, Codable, Hashable {
     let organizacionId: UUID?
     let fechaVisitaSinPago: Date?
     let cobradorId: UUID?
+    var estado: EstadoPago?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -40,6 +47,7 @@ struct Pago: Identifiable, Codable, Hashable {
         case organizacionId = "organizacion_id"
         case fechaVisitaSinPago = "fecha_visita_sin_pago"
         case cobradorId = "cobrador_id"
+        case estado
     }
 
     var nombreCliente: String {
