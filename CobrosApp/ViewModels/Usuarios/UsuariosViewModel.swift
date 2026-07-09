@@ -68,6 +68,16 @@ class UsuariosViewModel {
         isLoading = false
     }
     
+    func toggleActivo(usuario: Usuario) async {
+        guard let id = UUID(uuidString: usuario.id.uuidString) else { return }
+        do {
+            try await authService.toggleActivoCobrador(usuarioId: id, activo: !usuario.activo)
+            await cargarUsuarios()
+        } catch {
+            errorMessage = "No se pudo actualizar el estado: \(error.localizedDescription)"
+        }
+    }
+    
     private func limpiarFormulario() {
         nombre = ""
         clave = ""

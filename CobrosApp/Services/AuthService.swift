@@ -26,7 +26,15 @@ class AuthService {
     func login(claveOrg: String, clave: String) async throws -> Usuario {
         let email = buildEmail(claveOrg: claveOrg, clave: clave)
         try await supabase.auth.signIn(email: email, password: clave)
-        return try await fetchUsuarioActual()
+        
+        let usuario = try await fetchUsuarioActual()
+        
+        if !usuario.activo {
+            try await supabase.auth.signOut()
+            throw AuthError.usuarioInactivo
+        }
+        
+        return usuario
     }
 
     func logout() async throws {
@@ -134,8 +142,26 @@ class AuthService {
             .execute()
             .value
     }
+    
+    func toggleActivoCobrador(usuarioId: UUID, activo: Bool) async throws {
+        try await supabase
+            .from("usuarios")
+            .update(["activo": activo])
+            .eq("id", value: usuarioId.uuidString)
+            .execute()
+    }
 }
 
-enum AuthError: Error {
+enum AuthError: Error, LocalizedError {
     case noAutenticado
+    case usuarioInactivo
+    
+    var errorDescription: String? {
+        switch self {
+        case .noAutenticado:
+            return "No hay sesión activa"
+        case .usuarioInactivo:
+            return "Tu cuenta ha sido deshabilitada. Contacta al administrador."
+        }
+    }
 }

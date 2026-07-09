@@ -122,7 +122,7 @@ struct PrestamoRowView: View {
                     }
                 }
                 .padding(.vertical, 4)
-                .frame(width: geometry.size.width * 0.66, alignment: .leading)
+                .frame(width: geometry.size.width * 0.75, alignment: .leading)
 
                 Divider()
                     .padding(.vertical, 2)

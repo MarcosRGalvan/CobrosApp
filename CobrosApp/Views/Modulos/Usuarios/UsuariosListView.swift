@@ -28,15 +28,21 @@ struct UsuariosListView: View {
                         HStack(spacing: 12) {
                             Image(systemName: "person.circle.fill")
                                 .font(.title)
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(usuario.activo ? .blue : .gray)
                             
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(usuario.nombre)
                                     .font(.headline)
+                                    .foregroundStyle(usuario.activo ? .primary : .secondary)
                                 if let telefono = usuario.telefono, !telefono.isEmpty {
                                     Text(telefono)
                                         .font(.subheadline)
                                         .foregroundStyle(.secondary)
+                                }
+                                if !usuario.activo {
+                                    Text("Deshabilitado")
+                                        .font(.caption)
+                                        .foregroundStyle(.red)
                                 }
                             }
                             
@@ -46,6 +52,17 @@ struct UsuariosListView: View {
                                 .foregroundStyle(usuario.activo ? .green : .red)
                         }
                         .padding(.vertical, 4)
+                        .swipeActions(edge: .trailing) {
+                            Button {
+                                Task { await viewModel.toggleActivo(usuario: usuario) }
+                            } label: {
+                                Label(
+                                    usuario.activo ? "Deshabilitar" : "Habilitar",
+                                    systemImage: usuario.activo ? "person.slash.fill" : "person.fill.checkmark"
+                                )
+                            }
+                            .tint(usuario.activo ? .red : .green)
+                        }
                     }
                 }
             }
