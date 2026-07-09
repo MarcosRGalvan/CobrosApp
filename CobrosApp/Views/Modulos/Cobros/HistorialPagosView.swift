@@ -18,71 +18,103 @@ struct HistorialPagosView: View {
         return formatter
     }
     
+    private var pagosRealizados: [Pago] {
+        viewModel.pagos.filter { $0.estado == .pagado }
+    }
+    
+    private var pagosNoRealizados: [Pago] {
+        viewModel.pagos.filter { $0.estado == .sinPagar }
+    }
+    
+    private var pagosPendientes: [Pago] {
+        viewModel.pagos.filter { $0.estado == .pendiente }
+    }
+    
     var body: some View {
         Group {
             if viewModel.isLoading {
                 ProgressView("Cargando historial...")
             } else if viewModel.pagos.isEmpty {
                 ContentUnavailableView(
-                    "Sin pagos",
+                    "Sin historial",
                     systemImage: "list.bullet.clipboard",
                     description: Text("No hay pagos registrados para este préstamo.")
                 )
             } else {
                 List {
-                    ForEach(viewModel.pagos) { pago in
-                        HStack(spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .fill(pago.fechaPago != nil ? Color.green.opacity(0.15) : Color.orange.opacity(0.15))
-                                    .frame(width: 44, height: 44)
-                                Image(systemName: pago.fechaPago != nil ? "checkmark.circle.fill" : "clock.fill")
-                                    .foregroundStyle(pago.fechaPago != nil ? .green : .orange)
-                                    .font(.title3)
-                            }
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                if let cuota = pago.numeroCuota {
-                                    Text("Cuota \(cuota)")
-                                        .font(.headline)
-                                }
-                                if let fechaVence = pago.fechaVencimiento {
-                                    Text("Vence: \(fechaVence, formatter: uiDateFormatter)")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                if let fechaPago = pago.fechaPago {
-                                    Text("Pagado: \(fechaPago, formatter: uiDateFormatter)")
-                                        .font(.caption)
-                                        .foregroundStyle(.green)
-                                }
-                            }
-
-                            Spacer()
-
-                            VStack(alignment: .trailing, spacing: 4) {
-                                Text(pago.montoPagado, format: .currency(code: "MXN"))
-                                    .font(.subheadline)
+                    Section {
+                        HStack(spacing: 0) {
+                            VStack(spacing: 4) {
+                                Text("\(pagosRealizados.count)")
+                                    .font(.title)
                                     .bold()
-                                if let fechaPago = pago.fechaPago,
-                                   let fechaVence = pago.fechaVencimiento {
-                                    let calendar = Calendar.current
-                                    let pagoSinHora = calendar.startOfDay(for: fechaPago)
-                                    let venceSinHora = calendar.startOfDay(for: fechaVence)
-                                    if pagoSinHora > venceSinHora {
-                                        Text("Tardío")
-                                            .font(.caption)
-                                            .foregroundStyle(.red)
-                                            .padding(.horizontal, 6)
-                                            .padding(.vertical, 2)
-                                            .background(Color.red.opacity(0.1))
-                                            .clipShape(Capsule())
-                                    }
-                                }
+                                    .foregroundStyle(.green)
+                                Text("Realizados")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            
+                            Divider()
+                            
+                            VStack(spacing: 4) {
+                                Text("\(pagosNoRealizados.count)")
+                                    .font(.title)
+                                    .bold()
+                                    .foregroundStyle(.red)
+                                Text("No realizados")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            
+                            Divider()
+                            
+                            VStack(spacing: 4) {
+                                Text("\(viewModel.pagos.count)")
+                                    .font(.title)
+                                    .bold()
+                                Text("Total")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    
+                    // Pagados
+                    if !pagosRealizados.isEmpty {
+                        Section(header: Text("Pagos realizados")) {
+                            ForEach(pagosRealizados) { pago in
+                                filaPago(pago)
                             }
                         }
-                        .padding(.vertical, 4)
                     }
+                    
+                    // No realizados
+                    if !pagosNoRealizados.isEmpty {
+                        Section(header:
+                                    Label("No realizados", systemImage: "exclamationmark.triangle.fill")
+                                        .foregroundStyle(.red)
+                        ) {
+                            ForEach(pagosNoRealizados) { pago in
+                                filaPago(pago)
+                            }
+                        }
+                    }
+                    
+                    // Pendientes
+                    /* if !pagosPendientes.isEmpty {
+                        Section(header:
+                                    Label("Pendientes", systemImage: "clock.fill")
+                                        .foregroundStyle(.orange)
+                        ) {
+                            ForEach(pagosPendientes) { pago in
+                                filaPago(pago)
+                            }
+                        }
+                    } */
                 }
             }
         }
@@ -101,8 +133,97 @@ struct HistorialPagosView: View {
             Text(viewModel.errorMessage ?? "")
         }
     }
+    
+    @ViewBuilder
+    private func filaPago(_ pago: Pago) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(iconColor(pago).opacity(0.15))
+                    .frame(width: 44, height: 44)
+                Image(systemName: iconNombre(pago))
+                    .foregroundStyle(iconColor(pago))
+                    .font(.title3)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                if let cuota = pago.numeroCuota {
+                    Text("Cuota \(cuota)")
+                        .font(.headline)
+                }
+                if let fechaVence = pago.fechaVencimiento {
+                    Text("Vence: \(fechaVence, formatter: uiDateFormatter)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if let fechaPago = pago.fechaPago {
+                    Text("Pagado: \(fechaPago, formatter: uiDateFormatter)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if let fechaVisita = pago.fechaVisitaSinPago {
+                    Text("Visitado sin pago: \(fechaVisita, formatter: uiDateFormatter)")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(pago.montoPagado, format: .currency(code: "MXN"))
+                    .font(.subheadline)
+                    .bold()
+                
+                // Etiqueta tardío
+                if let fechaPago = pago.fechaPago,
+                   let fechaVence = pago.fechaVencimiento {
+                    let cal = Calendar.current
+                    if cal.startOfDay(for: fechaPago) > cal.startOfDay(for: fechaVence) {
+                        Text("Tardío")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.red.opacity(0.1))
+                            .clipShape(Capsule())
+                    }
+                }
+                
+                // Etiqueta no pagó
+                if pago.estado == .sinPagar {
+                    Text("No pagó")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.red.opacity(0.1))
+                        .clipShape(Capsule())
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+    
+    private func iconNombre(_ pago: Pago) -> String {
+        switch pago.estado {
+        case .pagado: return "checkmark.circle.fill"
+        case .sinPagar: return "xmark.circle.fill"
+        default: return "clock.fill"
+        }
+    }
+    
+    private func iconColor(_ pago: Pago) -> Color {
+        switch pago.estado {
+        case .pagado: return .green
+        case .sinPagar: return .red
+        default: return .orange
+        }
+    }
 }
 
 #Preview {
-    HistorialPagosView(prestamoId: 1, nombreCliente: "Marco Ramirez")
+    NavigationStack {
+        HistorialPagosView(prestamoId: 36, nombreCliente: "Marco Ramirez")
+    }
 }
