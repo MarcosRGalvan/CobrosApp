@@ -32,4 +32,5 @@ struct Usuario: Identifiable, Codable {
 enum RolUsuario: String, Codable {
     case admin
     case cobrador
+    case desarrollador
 }

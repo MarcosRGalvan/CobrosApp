@@ -7,14 +7,16 @@
 
 import Foundation
 
-struct Organizacion: Identifiable, Codable {
+struct Organizacion: Identifiable, Codable, Hashable {
     let id: UUID
     let nombre: String
     let clave: String
+    let createdAt: Date?
     
     enum CodingKeys: String, CodingKey {
         case id
         case nombre
         case clave
+        case createdAt = "created_at"
     }
 }

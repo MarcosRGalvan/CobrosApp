@@ -25,9 +25,18 @@ class AuthService {
     // Login para admin y cobrador - misma pantalla, misma logica
     func login(claveOrg: String, clave: String) async throws -> Usuario {
         let email = buildEmail(claveOrg: claveOrg, clave: clave)
-        try await supabase.auth.signIn(email: email, password: clave)
+        print("📧 Intentando login con email: \(email)")
+        
+        do {
+            try await supabase.auth.signIn(email: email, password: clave)
+            print("✅ SignIn exitoso")
+        } catch {
+            print("❌ Error en signIn: \(error)")
+            throw error
+        }
         
         let usuario = try await fetchUsuarioActual()
+        print("👤 Usuario obtenido: \(usuario)")
         
         if !usuario.activo {
             try await supabase.auth.signOut()

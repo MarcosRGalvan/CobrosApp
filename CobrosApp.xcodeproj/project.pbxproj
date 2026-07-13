@@ -9,17 +9,51 @@
 /* Begin PBXBuildFile section */
 		5DBF2B0D2FBD74FD00294A55 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 5DBF2B0C2FBD74FD00294A55 /* Supabase */; };
 		5DEC272A2FF5B268003B2734 /* CobrosAppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5DEC27292FF5B268003B2734 /* CobrosAppIcon.icon */; };
+		5DED7D9A300169A500047B1B /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 5DED7D99300169A500047B1B /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		5DBF2A602FBD3BDA00294A55 /* CobrosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = CobrosApp.app; path = "/Users/marcoramirez/Documents/Desarrollo/Apps iOS/CobrosApp/build/Debug-iphoneos/CobrosApp.app"; sourceTree = "<absolute>"; };
 		5DEC27292FF5B268003B2734 /* CobrosAppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = CobrosAppIcon.icon; sourceTree = "<group>"; };
+		5DED7D1E300167C400047B1B /* CobrosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CobrosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DED7D8D300168D800047B1B /* CobrosAdmin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CobrosAdmin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		5DED7DE230016C3F00047B1B /* Exceptions for "CobrosApp" folder in "CobrosAdmin" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Enums/HomeDestination.swift,
+				iOS/ViewModels/Usuarios/AuthViewModel.swift,
+				Models/Cliente.swift,
+				Models/FormaPago.swift,
+				Models/FrecuenciaPag.swift,
+				Models/Organizacion.swift,
+				Models/Pago.swift,
+				Models/Prestamo.swift,
+				Models/ResumenDia.swift,
+				Models/Usuario.swift,
+				Services/AuthService.swift,
+				Services/OrganizacionesService.swift,
+				Services/PagoService.swift,
+				Services/PrestamoService.swift,
+				Services/SupabaseManager.swift,
+			);
+			target = 5DED7D8C300168D800047B1B /* CobrosAdmin */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5DBF2A622FBD3BDA00294A55 /* CobrosApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				5DED7DE230016C3F00047B1B /* Exceptions for "CobrosApp" folder in "CobrosAdmin" target */,
+			);
 			path = CobrosApp;
+			sourceTree = "<group>";
+		};
+		5DED7D8E300168D800047B1B /* CobrosAdmin */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CobrosAdmin;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -33,6 +67,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5DED7D8A300168D800047B1B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5DED7D9A300169A500047B1B /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -41,7 +83,18 @@
 			children = (
 				5DBF2A622FBD3BDA00294A55 /* CobrosApp */,
 				5DEC27292FF5B268003B2734 /* CobrosAppIcon.icon */,
+				5DED7D1E300167C400047B1B /* CobrosApp.app */,
+				5DED7D8D300168D800047B1B /* CobrosAdmin.app */,
+				5DED7D8E300168D800047B1B /* CobrosAdmin */,
+				5DED7D98300169A500047B1B /* Frameworks */,
 			);
+			sourceTree = "<group>";
+		};
+		5DED7D98300169A500047B1B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -67,7 +120,30 @@
 				5DBF2B0C2FBD74FD00294A55 /* Supabase */,
 			);
 			productName = CobrosApp;
-			productReference = 5DBF2A602FBD3BDA00294A55 /* CobrosApp.app */;
+			productReference = 5DED7D1E300167C400047B1B /* CobrosApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		5DED7D8C300168D800047B1B /* CobrosAdmin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5DED7D97300168D900047B1B /* Build configuration list for PBXNativeTarget "CobrosAdmin" */;
+			buildPhases = (
+				5DED7D89300168D800047B1B /* Sources */,
+				5DED7D8A300168D800047B1B /* Frameworks */,
+				5DED7D8B300168D800047B1B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				5DED7D8E300168D800047B1B /* CobrosAdmin */,
+			);
+			name = CobrosAdmin;
+			packageProductDependencies = (
+				5DED7D99300169A500047B1B /* Supabase */,
+			);
+			productName = CobrosAdmin;
+			productReference = 5DED7D8D300168D800047B1B /* CobrosAdmin.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -81,6 +157,9 @@
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					5DBF2A5F2FBD3BDA00294A55 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					5DED7D8C300168D800047B1B = {
 						CreatedOnToolsVersion = 26.5;
 					};
 				};
@@ -103,6 +182,7 @@
 			projectRoot = "";
 			targets = (
 				5DBF2A5F2FBD3BDA00294A55 /* CobrosApp */,
+				5DED7D8C300168D800047B1B /* CobrosAdmin */,
 			);
 		};
 /* End PBXProject section */
@@ -116,10 +196,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5DED7D8B300168D800047B1B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5DBF2A5C2FBD3BDA00294A55 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5DED7D89300168D800047B1B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -320,6 +414,92 @@
 			};
 			name = Release;
 		};
+		5DED7D95300168D900047B1B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 593W6285R7;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mx.com.marcoramirezg.CobrosAdmin;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		5DED7D96300168D900047B1B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 593W6285R7;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mx.com.marcoramirezg.CobrosAdmin;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -341,6 +521,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		5DED7D97300168D900047B1B /* Build configuration list for PBXNativeTarget "CobrosAdmin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5DED7D95300168D900047B1B /* Debug */,
+				5DED7D96300168D900047B1B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -356,6 +545,11 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		5DBF2B0C2FBD74FD00294A55 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5DBF2AF32FBD603E00294A55 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		5DED7D99300169A500047B1B /* Supabase */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5DBF2AF32FBD603E00294A55 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;

@@ -15,7 +15,11 @@ class AuthViewModel {
     var errorMessage: String?
     
     var estaAutenticado: Bool{ usuarioActual != nil }
-    var esAdmin: Bool { usuarioActual?.rol == .admin }
+    var esAdmin: Bool {
+        usuarioActual?.rol == .admin || usuarioActual?.rol == .desarrollador
+    }
+    
+    var esDesarrollador: Bool { usuarioActual?.rol == .desarrollador }
     
     private let authService = AuthService()
     
