@@ -42,6 +42,14 @@ struct OrganizacionesView: View {
             .toolbar {
                 ToolbarItem {
                     Button {
+                        viewModel.generarClave()
+                        viewModel.mostrarCrearOrg = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+                ToolbarItem {
+                    Button {
                         Task { await viewModel.cargarOrganizaciones() }
                     } label: {
                         Image(systemName: "arrow.clockwise")
@@ -61,7 +69,16 @@ struct OrganizacionesView: View {
         }
         .task { await viewModel.cargarOrganizaciones() }
         .sheet(isPresented: $viewModel.mostrarCrearOrg) {
-            EmptyView()
+            CrearOrganizacionView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $viewModel.mostrarCredenciales) {
+            if let creds = viewModel.credencialesAdmin {
+                CredencialesAdminView(
+                    email: creds.email,
+                    clave: creds.clave,
+                    claveOrg: viewModel.organizaciones.last?.clave ?? ""
+                )
+            }
         }
         .alert(
             "Error",

@@ -20,21 +20,37 @@ class OrganizacionesService {
             .value
     }
     
-    func crearOrganizacion(nombre: String, clave: String) async throws -> Organizacion {
-        struct OrganizacionInsert: Encodable {
+    func crearOrganizacion(nombre: String, clave: String) async throws -> String {
+        let claveAdmin = generarClaveOrganizacion()
+
+        struct Payload: Encodable {
             let nombre: String
             let clave: String
+            let claveAdmin: String
+        }
+
+        struct RespuestaRaw: Decodable {
+            let ok: Bool
+            let claveAdmin: String
         }
         
-        let payload = OrganizacionInsert(nombre: nombre, clave: clave)
+        guard let token = supabase.auth.currentSession?.accessToken else {
+            throw NSError(
+                domain: "OrganizacionesService",
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "No hay sesión activa"]
+            )
+        }
         
-        return try await supabase
-            .from("organizaciones")
-            .insert(payload)
-            .select()
-            .single()
-            .execute()
-            .value
+        let respuesta: RespuestaRaw = try await supabase.functions.invoke(
+            "quick-responder",
+            options: FunctionInvokeOptions(
+                headers: ["Authorization": "Bearer \(token)"],
+                body: Payload(nombre: nombre, clave: clave, claveAdmin: claveAdmin)
+            )
+        )
+        
+        return respuesta.claveAdmin
     }
     
     func generarClaveOrganizacion() -> String {

@@ -17,6 +17,10 @@ class OrganizacionesViewModel {
     var mostrarCrearOrg = false
     var orgCreada = false
     
+    // Credenciales de admin recien creado
+    var credencialesAdmin: (email: String, clave: String)?
+    var mostrarCredenciales = false
+    
     // Campos para crear
     var nombreNuevaOrg = ""
     var claveGenerada = ""
@@ -48,16 +52,21 @@ class OrganizacionesViewModel {
         }
         isLoading = true
         do {
-            _ = try await service.crearOrganizacion(
+            let claveAdmin = try await service.crearOrganizacion(
                 nombre: nombreNuevaOrg,
                 clave: claveGenerada
             )
-            orgCreada = true
-            nombreNuevaOrg = ""
-            claveGenerada = ""
+            credencialesAdmin = (
+                email: "\(claveGenerada.lowercased()).admin@cobrosapp.internal",
+                clave: claveAdmin
+            )
             mostrarCrearOrg = false
+            mostrarCredenciales = true
+            nombreNuevaOrg = ""
             await cargarOrganizaciones()
+            claveGenerada = ""
         } catch {
+            print("❌ Error: \(error)")
             errorMessage = "No se pudo crear: \(error.localizedDescription)"
         }
         isLoading = false
