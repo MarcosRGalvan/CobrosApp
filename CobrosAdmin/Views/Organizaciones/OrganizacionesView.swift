@@ -61,7 +61,7 @@ struct OrganizacionesView: View {
         }
         .task { await viewModel.cargarOrganizaciones() }
         .sheet(isPresented: $viewModel.mostrarCrearOrg) {
-            CrearOrganizacionesView(viewModel: viewModel)
+            EmptyView()
         }
         .alert(
             "Error",

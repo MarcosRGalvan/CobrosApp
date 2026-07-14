@@ -135,7 +135,7 @@ struct DetalleOrganizacionView: View {
         }
         .navigationTitle(organizacion.nombre)
         .navigationSubtitle("Detalle de organización")
-        .task { await viewModel.cargarDatos(organizacionId: organizacion.id) }
+        .task(id: organizacion.id) { await viewModel.cargarDatos(organizacionId: organizacion.id) }
         .alert(
             "Error",
             isPresented: Binding(
