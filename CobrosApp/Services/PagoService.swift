@@ -506,6 +506,34 @@ class PagoService {
             .eq("id", value: pagoId)
             .execute()
     }
+    
+    func fetchEstadisticasCobrador(cobradorId: UUID, fecha: Date) async throws -> (totalCobros: Int, totalRecaudado: Double) {
+        let calendar = Calendar.current
+        let inicioDia = calendar.startOfDay(for: fecha)
+        let finDia = calendar.date(byAdding: .day, value: 1, to: inicioDia)!
+        
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone.current
+        
+        struct MontoPago: Decodable {
+            let montoPagado: Double
+            enum CodingKeys: String, CodingKey {
+                case montoPagado = "monto_pagado"
+            }
+        }
+        
+        let response: [MontoPago] = try await supabase
+            .from("pagos")
+            .select("monto_pagado")
+            .eq("cobrador_id", value: cobradorId.uuidString)
+            .gte("fecha_pago", value: formatter.string(from: inicioDia))
+            .lt("fecha_pago", value: formatter.string(from: finDia))
+            .not("fecha_pago", operator: .is, value: "null")
+            .execute()
+            .value
+        
+        return (response.count, response.map { $0.montoPagado }.reduce(0, +))
+    }
 }
 
 extension Double {

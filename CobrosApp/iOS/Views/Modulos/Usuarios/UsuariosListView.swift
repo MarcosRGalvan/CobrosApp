@@ -25,33 +25,37 @@ struct UsuariosListView: View {
             } else {
                 List {
                     ForEach(viewModel.usuariosFiltrados) { usuario in
-                        HStack(spacing: 12) {
-                            Image(systemName: "person.circle.fill")
-                                .font(.title)
-                                .foregroundStyle(usuario.activo ? .blue : .gray)
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(usuario.nombre)
-                                    .font(.headline)
-                                    .foregroundStyle(usuario.activo ? .primary : .secondary)
-                                if let telefono = usuario.telefono, !telefono.isEmpty {
-                                    Text(telefono)
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                        NavigationLink {
+                            DetalleUsuarioView(usuario: usuario)
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "person.circle.fill")
+                                    .font(.title)
+                                    .foregroundStyle(usuario.activo ? .blue : .gray)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(usuario.nombre)
+                                        .font(.headline)
+                                        .foregroundStyle(usuario.activo ? .primary : .secondary)
+                                    if let telefono = usuario.telefono, !telefono.isEmpty {
+                                        Text(telefono)
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if !usuario.activo {
+                                        Text("Deshabilitado")
+                                            .font(.caption)
+                                            .foregroundStyle(.red)
+                                    }
                                 }
-                                if !usuario.activo {
-                                    Text("Deshabilitado")
-                                        .font(.caption)
-                                        .foregroundStyle(.red)
-                                }
+
+                                Spacer()
+
+                                Image(systemName: usuario.activo ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                    .foregroundStyle(usuario.activo ? .green : .red)
                             }
-                            
-                            Spacer()
-                            
-                            Image(systemName: usuario.activo ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                .foregroundStyle(usuario.activo ? .green : .red)
+                            .padding(.vertical, 4)
                         }
-                        .padding(.vertical, 4)
                         .swipeActions(edge: .trailing) {
                             Button {
                                 Task { await viewModel.toggleActivo(usuario: usuario) }
@@ -99,4 +103,8 @@ struct UsuariosListView: View {
             Text(viewModel.errorMessage ?? "")
         }
     }
+}
+
+#Preview {
+    UsuariosListView()
 }
