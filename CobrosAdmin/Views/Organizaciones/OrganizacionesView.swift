@@ -2,16 +2,16 @@
 //  OrganizacionesView.swift
 //  CobrosAdmin
 //
-//  Created by Marco Ramirez on 10/07/26.
+//  Created by Marco Ramirez on 15/07/26.
 //
 
 import SwiftUI
 
 struct OrganizacionesView: View {
-    @State private var viewModel = OrganizacionesViewModel()
+    @Bindable var viewModel: OrganizacionesViewModel
     
     var body: some View {
-        NavigationSplitView {
+        HSplitView {
             Group {
                 if viewModel.isLoading && viewModel.organizaciones.isEmpty {
                     ProgressView("Cargando...")
@@ -19,7 +19,7 @@ struct OrganizacionesView: View {
                     ContentUnavailableView(
                         "Sin organizaciones",
                         systemImage: "building.2",
-                        description: Text("Aún no hay organizaciones registradas.")
+                        description: Text("Aún no hay organizaciones creadas.")
                     )
                 } else {
                     List(
@@ -38,7 +38,6 @@ struct OrganizacionesView: View {
                     }
                 }
             }
-            .navigationTitle("Organizaciones")
             .toolbar {
                 ToolbarItem {
                     Button {
@@ -50,13 +49,14 @@ struct OrganizacionesView: View {
                 }
                 ToolbarItem {
                     Button {
-                        Task { await viewModel.cargarOrganizaciones() }
+                        Task { await viewModel.crearOrganizacion() }
                     } label: {
                         Image(systemName: "arrow.clockwise")
                     }
                 }
             }
-        } detail: {
+            
+            // Detalle
             if let org = viewModel.organizacionSeleccionada {
                 DetalleOrganizacionView(organizacion: org)
             } else {
@@ -67,6 +67,8 @@ struct OrganizacionesView: View {
                 )
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .navigationTitle("Organizaciones")
         .task { await viewModel.cargarOrganizaciones() }
         .sheet(isPresented: $viewModel.mostrarCrearOrg) {
             CrearOrganizacionView(viewModel: viewModel)
@@ -95,5 +97,5 @@ struct OrganizacionesView: View {
 }
 
 #Preview {
-    OrganizacionesView()
+    OrganizacionesView(viewModel: OrganizacionesViewModel())
 }
