@@ -28,7 +28,8 @@ struct ContentView: View {
         ]
         
         if auth.esAdmin {
-            result.append(HomeItem(icon: "person.badge.shield.checkmark.fill", title: "Usuarios", destination: .usuarios))
+            result.append(HomeItem(icon: "person.badge.shield.checkmark.fill", title: "Cobradores", destination: .usuarios))
+            result.append(HomeItem(icon: "road.lanes", title: "Rutas", destination: .rutas))
             result.append(HomeItem(icon: "gearshape.fill", title: "Configuración", destination: .configuracion))
         }
         
@@ -106,6 +107,8 @@ struct ContentView: View {
                     UsuariosListView()
                 case .configuracion:
                     EmptyView()
+                case .rutas:
+                    RutaListView()
                 }
             }
             .toolbar {

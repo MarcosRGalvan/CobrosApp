@@ -31,11 +31,14 @@
 				Models/Pago.swift,
 				Models/Prestamo.swift,
 				Models/ResumenDia.swift,
+				Models/Ruta.swift,
+				Models/RutaAnidada.swift,
 				Models/Usuario.swift,
 				Services/AuthService.swift,
 				Services/OrganizacionesService.swift,
 				Services/PagoService.swift,
 				Services/PrestamoService.swift,
+				Services/RutaService.swift,
 				Services/SupabaseManager.swift,
 			);
 			target = 5DED7D8C300168D800047B1B /* CobrosAdmin */;

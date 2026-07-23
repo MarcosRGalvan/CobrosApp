@@ -18,6 +18,7 @@ struct Cliente: Identifiable, Codable, Hashable {
     var organizacionId: UUID?
     var latitud: Double?
     var longitud: Double?
+    var rutaId: UUID?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -30,5 +31,6 @@ struct Cliente: Identifiable, Codable, Hashable {
         case organizacionId = "organizacion_id"
         case latitud
         case longitud
+        case rutaId = "ruta_id"
     }
 }

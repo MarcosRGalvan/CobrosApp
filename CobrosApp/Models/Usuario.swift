@@ -16,6 +16,7 @@ struct Usuario: Identifiable, Codable {
     let direccion: String?
     let telefono: String?
     let activo: Bool
+    let rutaAsignada: RutaAnidada?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -26,6 +27,7 @@ struct Usuario: Identifiable, Codable {
         case direccion
         case telefono
         case activo
+        case rutaAsignada = "rutas"
     }
 }
 

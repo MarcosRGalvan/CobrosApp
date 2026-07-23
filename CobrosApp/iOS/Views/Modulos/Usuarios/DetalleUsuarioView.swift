@@ -119,7 +119,8 @@ struct DetalleUsuarioView: View {
                 rol: .admin,
                 direccion: "Calle Falsa 123",
                 telefono: "4353453454",
-                activo: false
+                activo: false,
+                rutaAsignada: RutaAnidada(id: UUID(), nombre: "Ruta demo", activo: true)
             )
         )
     }

@@ -15,4 +15,5 @@ enum HomeDestination: Hashable {
     case crearPrestamo(Cliente?)
     case usuarios
     case configuracion
+    case rutas
 }
