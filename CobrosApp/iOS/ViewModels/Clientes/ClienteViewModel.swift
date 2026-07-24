@@ -96,18 +96,15 @@ class ClienteViewModel {
                 .execute()
                 .value
             
+            let rutaId = try await RutaService().fetchRutaIdDelCobrador()
+            
             var clienteConOrg = cliente
             clienteConOrg.organizacionId = orgRow.organizacion_id
+            clienteConOrg.rutaId = rutaId
             
             //print("🏢 organizacionId a insertar: \(String(describing: clienteConOrg.organizacionId))")
             //print("👤 userId: \(userId)")
             
-            let encoder = JSONEncoder()
-            encoder.keyEncodingStrategy = .convertToSnakeCase
-            if let data = try? encoder.encode(clienteConOrg),
-               let json = String(data: data, encoding: .utf8) {
-                //print("📤 JSON a insertar: \(json)")
-            }
             
             let clienteCreado: [Cliente] = try await SupabaseManager.shared.client
                 .from("clientes")
