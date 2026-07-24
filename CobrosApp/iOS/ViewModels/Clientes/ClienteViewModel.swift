@@ -39,19 +39,28 @@ class ClienteViewModel {
         }
         
         do {
-            let fecthClientes: [Cliente] = try await SupabaseManager.shared.client
+            let rutaService = RutaService()
+            let rutaId = try await rutaService.fetchRutaIdDelCobrador()
+            
+            var query = SupabaseManager.shared.client
                 .from("clientes")
                 .select()
+            
+            if let rutaId = rutaId {
+                query = query.eq("ruta_id", value: rutaId.uuidString)
+            }
+            
+            let fetchClientes: [Cliente] = try await query
                 .execute()
                 .value
             
             await MainActor.run {
-                self.clientes = fecthClientes
+                self.clientes = fetchClientes
                 self.isLoading = false
             }
         } catch {
-            print("❌ Error detallado de Supabase: \(error)")
-            print(String(describing: error))
+            //print("❌ Error detallado de Supabase: \(error)")
+            //print(String(describing: error))
             
             await MainActor.run {
                 self.errorMessage = "No se pudieron cargar los clientes: \(error.localizedDescription)"
@@ -90,14 +99,14 @@ class ClienteViewModel {
             var clienteConOrg = cliente
             clienteConOrg.organizacionId = orgRow.organizacion_id
             
-            print("🏢 organizacionId a insertar: \(String(describing: clienteConOrg.organizacionId))")
-            print("👤 userId: \(userId)")
+            //print("🏢 organizacionId a insertar: \(String(describing: clienteConOrg.organizacionId))")
+            //print("👤 userId: \(userId)")
             
             let encoder = JSONEncoder()
             encoder.keyEncodingStrategy = .convertToSnakeCase
             if let data = try? encoder.encode(clienteConOrg),
                let json = String(data: data, encoding: .utf8) {
-                print("📤 JSON a insertar: \(json)")
+                //print("📤 JSON a insertar: \(json)")
             }
             
             let clienteCreado: [Cliente] = try await SupabaseManager.shared.client
@@ -160,7 +169,7 @@ class ClienteViewModel {
             encoder.keyEncodingStrategy = .convertToSnakeCase
             if let data = try? encoder.encode(cliente),
                let json = String(data: data, encoding: .utf8) {
-                print("📤 JSON a actualizar: \(json)")
+                // print("📤 JSON a actualizar: \(json)")
             }
             
             let clienteActualizado: [Cliente] = try await SupabaseManager.shared.client

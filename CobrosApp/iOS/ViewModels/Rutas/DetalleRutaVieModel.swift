@@ -41,7 +41,7 @@ class DetalleRutaViewModel {
                 cobrador = u.first { $0.id == cobradorId }
             }
         } catch is CancellationError {
-            print("⚠️ Cancelado")
+             //print("⚠️ Cancelado")
         } catch {
             errorMessage = "Error cargando datos: \(error.localizedDescription)"
         }

@@ -53,14 +53,14 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         Task { @MainActor in
-            print("📍 Ubicación obtenida: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+            // print("📍 Ubicación obtenida: \(location.coordinate.latitude), \(location.coordinate.longitude)")
             self.ubicacionActual = location.coordinate
         }
     }
     
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         Task { @MainActor in
-            print("❌ Error de ubicación: \(error.localizedDescription)")
+            //print("❌ Error de ubicación: \(error.localizedDescription)")
             self.errorMessage = "No se pudo obtener tu ubicación: \(error.localizedDescription)"
         }
     }

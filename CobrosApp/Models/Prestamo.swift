@@ -33,7 +33,57 @@ struct Prestamo: Identifiable, Codable, Hashable {
         case cliente = "clientes"
         case organizacionId = "organizacion_id"
     }
-    
+
+    init(
+        id: Int? = nil,
+        clienteId: Int,
+        montoPrestado: Double,
+        cuotas: Int,
+        fechaPrestamo: Date,
+        frecuenciaPago: Int,
+        interesPorciento: Double,
+        fechaTermino: Date? = nil,
+        activo: Bool,
+        organizacionId: UUID? = nil,
+        cliente: ClienteAnidado? = nil
+    ) {
+        self.id = id
+        self.clienteId = clienteId
+        self.montoPrestado = montoPrestado
+        self.cuotas = cuotas
+        self.fechaPrestamo = fechaPrestamo
+        self.frecuenciaPago = frecuenciaPago
+        self.interesPorciento = interesPorciento
+        self.fechaTermino = fechaTermino
+        self.activo = activo
+        self.organizacionId = organizacionId
+        self.cliente = cliente
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(Int.self, forKey: .id)
+        clienteId = try container.decode(Int.self, forKey: .clienteId)
+        montoPrestado = try container.decode(Double.self, forKey: .montoPrestado)
+        cuotas = try container.decode(Int.self, forKey: .cuotas)
+        fechaPrestamo = try container.decode(Date.self, forKey: .fechaPrestamo)
+        frecuenciaPago = try container.decode(Int.self, forKey: .frecuenciaPago)
+        interesPorciento = try container.decode(Double.self, forKey: .interesPorciento)
+        fechaTermino = try container.decodeIfPresent(Date.self, forKey: .fechaTermino)
+        activo = try container.decode(Bool.self, forKey: .activo)
+        organizacionId = try container.decodeIfPresent(UUID.self, forKey: .organizacionId)
+
+        // Supabase a veces embebe la relación "clientes" como objeto y a veces
+        // como array de un elemento (relación ambigua para PostgREST); se aceptan ambas formas.
+        if let clienteObjeto = try? container.decodeIfPresent(ClienteAnidado.self, forKey: .cliente) {
+            cliente = clienteObjeto
+        } else if let clienteArreglo = try? container.decodeIfPresent([ClienteAnidado].self, forKey: .cliente) {
+            cliente = clienteArreglo.first
+        } else {
+            cliente = nil
+        }
+    }
+
     var nombreCompletoCliente: String {
         if let cliente = cliente {
             return "\(cliente.nombre) \(cliente.appaterno) \(cliente.apmaterno ?? "")"
@@ -74,6 +124,17 @@ struct ClienteAnidado: Codable, Hashable {
     var telefono: String?
     var direccion: String?
     var email: String?
+    var rutaId: UUID?
+    
+    enum CodingKeys: String, CodingKey {
+        case nombre
+        case appaterno
+        case apmaterno
+        case telefono
+        case direccion
+        case email
+        case rutaId = "ruta_id"  // ← nuevo
+    }
 }
 
 

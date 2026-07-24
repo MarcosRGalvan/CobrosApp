@@ -33,8 +33,8 @@ class FrecPagoViewModel {
                 self.isLoading = false
             }
         } catch {
-            print("❌ Error detallado de Supabase: \(error)")
-            print(String(describing: error))
+            //print("❌ Error detallado de Supabase: \(error)")
+            //print(String(describing: error))
             
             await MainActor.run {
                 self.errorMessage = "No se pudieron cargar las frecuencias de pago: \(error.localizedDescription)"

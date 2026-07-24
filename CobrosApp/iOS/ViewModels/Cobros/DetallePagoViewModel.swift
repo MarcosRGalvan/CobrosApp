@@ -90,7 +90,7 @@ class DetallePagoViewModel {
                 saldoRestante = (montoPrestado - capitalPagado).rounded(toPlaces: 2)
             }
         } catch {
-            print("Error cargando datos: \(error.localizedDescription)")
+            // print("Error cargando datos: \(error.localizedDescription)")
         }
     }
     

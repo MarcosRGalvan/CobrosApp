@@ -34,8 +34,8 @@ class FormasPagoViewModel {
                 self.isLoading = false
             }
         } catch {
-            print("❌ error detallado de Supabase: \(error)")
-            print(String(describing: error))
+            // print("❌ error detallado de Supabase: \(error)")
+            // print(String(describing: error))
             
             await MainActor.run {
                 self.errorMessage = "No se pudieron cargar las formas de pago: \(error.localizedDescription)"

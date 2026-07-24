@@ -87,15 +87,15 @@ class CobrosDiariosViewModel {
                     cobrosPageados = pg
                     cobrosSinPagar = sp
                     isLoading = false
-                    print("✅ Pendientes: \(p.count), Pagados: \(pg.count), Sin pagar: \(sp.count)")
+                    // print("✅ Pendientes: \(p.count), Pagados: \(pg.count), Sin pagar: \(sp.count)")
                 }
             } catch is CancellationError {
-                print("⚠️ Cancelado")
+                // print("⚠️ Cancelado")
             } catch {
                 await MainActor.run {
                     errorMessage = error.localizedDescription
                     isLoading = false
-                    print("❌ Error: \(error)")
+                    // print("❌ Error: \(error)")
                 }
             }
         }

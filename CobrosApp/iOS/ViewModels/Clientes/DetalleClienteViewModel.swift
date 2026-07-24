@@ -40,18 +40,18 @@ class DetalleClienteViewModel {
     
     func cargarEstadisticas() async {
         guard let clienteId = cliente.id else {
-            print("❌ No hay clienteId")
+            // print("❌ No hay clienteId")
             return
         }
-        print("🔍 Cargando estadísticas para clienteId: \(clienteId)")
+        // print("🔍 Cargando estadísticas para clienteId: \(clienteId)")
         isLoading = true
         do {
             async let incumplimientosTask = pagoService.fetchIncumplimientos(clienteId: clienteId)
             async let scoreTask = pagoService.fetchScoreCliente(clienteId: clienteId)
             (incumplimientos, score) = try await (incumplimientosTask, scoreTask)
-            print("✅ Score: \(score), Incumplimientos: \(incumplimientos)")
+            // print("✅ Score: \(score), Incumplimientos: \(incumplimientos)")
         } catch {
-            print("❌ Error: \(error)")
+            // print("❌ Error: \(error)")
             errorMessage = "No se pudieron cargar las estadísticas: \(error.localizedDescription)"
         }
         isLoading = false

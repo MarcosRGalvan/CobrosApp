@@ -108,20 +108,23 @@ class RutaService {
     // Fetch ruta del cobrador actual para usarla al crear clientes
     func fetchRutaIdDelCobrador() async throws -> UUID? {
         guard let userId = supabase.auth.currentUser?.id else { return nil }
-        
+
         struct RutaId: Decodable {
             let id: UUID
         }
-        
-        let rutas: [RutaId] = try await supabase
+
+        let response = try await supabase
             .from("rutas")
             .select("id")
             .eq("cobrador_id", value: userId.uuidString)
             .eq("activo", value: true)
             .limit(1)
             .execute()
-            .value
-        
+
+        //print("📦 Raw rutaIdDelCobrador: \(String(data: response.data, encoding: .utf8) ?? "nil")")
+
+        let rutas = try JSONDecoder().decode([RutaId].self, from: response.data)
+
         return rutas.first?.id
     }
     

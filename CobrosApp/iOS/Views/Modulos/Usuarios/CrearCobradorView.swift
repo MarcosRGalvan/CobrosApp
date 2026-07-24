@@ -55,33 +55,29 @@ struct CrearCobradorView: View {
                 Section {
                     Button {
                         Task {
-                            print("👆 Botón tocado")
-                            print(
-                                "👤 Usuario actual: \(String(describing: auth.usuarioActual))"
-                            )
+                            //print("👆 Botón tocado")
+                            //print("👤 Usuario actual: \(String(describing: auth.usuarioActual))")
 
                             guard let orgId = auth.usuarioActual?.organizacionId
                             else {
-                                print("❌ No hay organizacionId")
+                                //print("❌ No hay organizacionId")
                                 return
                             }
-                            print("✅ orgId: \(orgId)")
+                            //print("✅ orgId: \(orgId)")
 
                             guard
                                 let claveOrg = await fetchClaveOrg(orgId: orgId)
                             else {
-                                print("❌ No se pudo obtener claveOrg")
+                                //print("❌ No se pudo obtener claveOrg")
                                 return
                             }
-                            print("✅ claveOrg: \(claveOrg)")
+                            //print("✅ claveOrg: \(claveOrg)")
 
                             await viewModel.crearCobrador(
                                 organizacionId: orgId,
                                 claveOrg: claveOrg
                             )
-                            print(
-                                "✅ crearCobrador terminó, usuarioCreado: \(viewModel.usuarioCreado), error: \(String(describing: viewModel.errorMessage))"
-                            )
+                            //print("✅ crearCobrador terminó, usuarioCreado: \(viewModel.usuarioCreado), error: \(String(describing: viewModel.errorMessage))")
                         }
                     } label: {
                         if viewModel.isLoading {
@@ -132,7 +128,7 @@ struct CrearCobradorView: View {
 
             return result.clave
         } catch {
-            print("❌ Error fetchClaveOrg: \(error)")
+            //print("❌ Error fetchClaveOrg: \(error)")
             return nil
         }
     }
