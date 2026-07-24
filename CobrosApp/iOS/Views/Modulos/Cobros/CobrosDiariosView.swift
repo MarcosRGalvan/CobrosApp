@@ -54,6 +54,14 @@ struct CobrosDiariosView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
+        .alert(
+            "Sin ruta asignada",
+            isPresented: $viewModel.sinRutaAsignada
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("No tienes una ruta asignada. Contacta a tu supervisor para que te asigne una.")
+        }
     }
     
     // MARK: - Tabs

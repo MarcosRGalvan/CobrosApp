@@ -10,6 +10,7 @@ class CobrosDiariosViewModel {
     var errorMessage: String?
     var textoBusqueda: String = ""
     var mostrarSoloPendientes: Bool = true
+    var sinRutaAsignada = false
     
     private let service = PagoService()
     private var tareaActual: Task<Void, Never>?
@@ -64,6 +65,17 @@ class CobrosDiariosViewModel {
         tareaActual = Task {
             await MainActor.run { isLoading = true }
             do {
+                let rutaId = try await RutaService().fetchRutaIdDelCobrador()
+                if rutaId == nil {
+                    await MainActor.run {
+                        sinRutaAsignada = true
+                        isLoading = false
+                    }
+                    return
+                }
+                
+                let resultado  = try await service.fetchCobrosDiarios()
+                
                 async let pendientes = service.fetchCobrosDiarios()
                 async let pagados = service.fetchCobrosDelDiaPorEstado(estado: "pagado")
                 async let sinPagar = service.fetchCobrosDelDiaPorEstado(estado: "sin_pagar")

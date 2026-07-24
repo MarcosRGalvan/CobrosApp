@@ -103,49 +103,91 @@ class PagoService {
     func fetchCobrosDiarios() async throws -> [Pago] {
         let hoy = Calendar.current.startOfDay(for: Date())
         let manana = Calendar.current.date(byAdding: .day, value: 1, to: hoy)!
-
         let formatter = ISO8601DateFormatter()
         let hasta = formatter.string(from: manana)
 
-        let response =
-            try await supabase
-            .from("pagos")
-            .select(
-                """
-                    *,
-                    prestamos (
-                        prestamo_id,
-                        monto_prestado,
-                        cuotas,
-                        interes_porciento,
-                        clientes (
-                            nombre,
-                            appaterno,
-                            apmaterno,
-                            telefono,
-                            direccion,
-                            email
+        let rutaService = RutaService()
+
+        // Si tiene ruta asignada filtra por ella
+        if let rutaId = try await rutaService.fetchRutaIdDelCobrador() {
+            // Obtener IDs de préstamos de clientes de esa ruta
+            struct PrestamoId: Decodable { let prestamo_id: Int }
+            let prestamos: [PrestamoId] =
+                try await supabase
+                .from("prestamos")
+                .select("prestamo_id, clientes!inner(ruta_id)")
+                .eq("clientes.ruta_id", value: rutaId.uuidString)
+                .execute()
+                .value
+
+            let ids = prestamos.map { $0.prestamo_id }
+
+            guard !ids.isEmpty else { return [] }
+
+            let response =
+                try await supabase
+                .from("pagos")
+                .select(
+                    """
+                        *,
+                        prestamos (
+                            prestamo_id,
+                            monto_prestado,
+                            cuotas,
+                            interes_porciento,
+                            clientes (
+                                nombre,
+                                appaterno,
+                                apmaterno,
+                                telefono,
+                                direccion,
+                                email,
+                                ruta_id
+                            )
                         )
-                    )
-                """
-            )
-            .lt("fecha_vencimiento", value: hasta)
-            .eq("estado", value: "pendiente")
-            .execute()
+                    """
+                )
+                .lt("fecha_vencimiento", value: hasta)
+                .eq("estado", value: "pendiente")
+                .in("prestamo_id", values: ids)
+                .execute()
 
-        /* print(
-            "📦 Raw response: \(String(data: response.data, encoding: .utf8) ?? "nil")"
-        ) */
-
-        do {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            let pagos = try decoder.decode([Pago].self, from: response.data)
-            //print("✅ Decode exitoso: \(pagos.count) pagos")
-            return pagos
-        } catch {
-            //print("❌ Error de decode: \(error)")
-            throw error
+            return try decoder.decode([Pago].self, from: response.data)
+
+        } else {
+            // Admin ve todo
+            let response =
+                try await supabase
+                .from("pagos")
+                .select(
+                    """
+                        *,
+                        prestamos (
+                            prestamo_id,
+                            monto_prestado,
+                            cuotas,
+                            interes_porciento,
+                            clientes (
+                                nombre,
+                                appaterno,
+                                apmaterno,
+                                telefono,
+                                direccion,
+                                email,
+                                ruta_id
+                            )
+                        )
+                    """
+                )
+                .lt("fecha_vencimiento", value: hasta)
+                .eq("estado", value: "pendiente")
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode([Pago].self, from: response.data)
         }
     }
 
@@ -191,7 +233,7 @@ class PagoService {
             .from("pagos")
             .update([
                 "estado": AnyJSON.string("sin_pagar"),
-                "fecha_visita_sin_pago": AnyJSON.null
+                "fecha_visita_sin_pago": AnyJSON.null,
             ])
             .eq("id", value: pagoId)
             .execute()
@@ -344,9 +386,11 @@ class PagoService {
 
         let tardios = pagos.filter { pago in
             guard let fechaPago = pago.fechaPago,
-                let fechaVence = pago.fechaVencimiento else { return false }
+                let fechaVence = pago.fechaVencimiento
+            else { return false }
             let calendar = Calendar.current
-            return calendar.startOfDay(for: fechaPago) > calendar.startOfDay(for: fechaVence)
+            return calendar.startOfDay(for: fechaPago)
+                > calendar.startOfDay(for: fechaVence)
         }.count
 
         return (sinPagar.count ?? 0) + tardios
@@ -398,26 +442,27 @@ class PagoService {
 
         let aTiempo = pagos.filter { pago in
             guard let fechaPago = pago.fechaPago,
-                let fechaVence = pago.fechaVencimiento else { return false }
+                let fechaVence = pago.fechaVencimiento
+            else { return false }
             let calendar = Calendar.current
-            return calendar.startOfDay(for: fechaPago) <= calendar.startOfDay(for: fechaVence)
+            return calendar.startOfDay(for: fechaPago)
+                <= calendar.startOfDay(for: fechaVence)
         }.count
 
         let totalCount = total.count ?? 0
         guard totalCount > 0 else { return 0 }
         return (Double(aTiempo) / Double(totalCount)) * 100
     }
-    
+
     func fetchCobrosDelDiaPorEstado(estado: String) async throws -> [Pago] {
         let hoy = Calendar.current.startOfDay(for: Date())
         let manana = Calendar.current.date(byAdding: .day, value: 1, to: hoy)!
         let formatter = ISO8601DateFormatter()
         let desde = formatter.string(from: hoy)
         let hasta = formatter.string(from: manana)
-        
-        let response = try await supabase
-            .from("pagos")
-            .select("""
+
+        let rutaService = RutaService()
+        let select = """
                 *,
                 prestamos (
                     prestamo_id,
@@ -430,23 +475,59 @@ class PagoService {
                         apmaterno,
                         telefono,
                         direccion,
-                        email
+                        email,
+                        ruta_id
                     )
                 )
-            """)
-            .gte("fecha_vencimiento", value: desde)
-            .lt("fecha_vencimiento", value: hasta)
-            .eq("estado", value: estado)
-            .execute()
-        
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([Pago].self, from: response.data)
+            """
+
+        if let rutaId = try await rutaService.fetchRutaIdDelCobrador() {
+            // Obtener IDs de préstamos de clientes de esa ruta
+            struct PrestamoId: Decodable { let prestamo_id: Int }
+            let prestamos: [PrestamoId] =
+                try await supabase
+                .from("prestamos")
+                .select("prestamo_id, clientes!inner(ruta_id)")
+                .eq("clientes.ruta_id", value: rutaId.uuidString)
+                .execute()
+                .value
+
+            let ids = prestamos.map { $0.prestamo_id }
+            guard !ids.isEmpty else { return [] }
+
+            let response =
+                try await supabase
+                .from("pagos")
+                .select(select)
+                .gte("fecha_vencimiento", value: desde)
+                .lt("fecha_vencimiento", value: hasta)
+                .eq("estado", value: estado)
+                .in("prestamo_id", values: ids)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode([Pago].self, from: response.data)
+
+        } else {
+            // Admin ve todo
+            let response =
+                try await supabase
+                .from("pagos")
+                .select(select)
+                .gte("fecha_vencimiento", value: desde)
+                .lt("fecha_vencimiento", value: hasta)
+                .eq("estado", value: estado)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode([Pago].self, from: response.data)
+        }
     }
-    
-    
     func fetchHistorialPagos(prestamoId: Int) async throws -> [Pago] {
-        let response = try await supabase
+        let response =
+            try await supabase
             .from("pagos")
             .select("*")
             .eq("prestamo_id", value: prestamoId)
@@ -457,7 +538,7 @@ class PagoService {
         decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode([Pago].self, from: response.data)
     }
-    
+
     // Corrige un pago ya registrado (solo admin) sin alterar la fecha original
     func actualizarPagoExistente(
         pagoId: Int,
@@ -480,14 +561,14 @@ class PagoService {
             recargos: recargos,
             cobradorId: cobradorIdOriginal
         )
-        
+
         try await supabase
             .from("pagos")
             .update(payload)
             .eq("id", value: pagoId)
             .execute()
     }
-    
+
     // Revertir pago a su estado inicial en caso de equivocación del cobrador
     // Vuelve a dejar el pago en pendiente por cobrar
     func revertirPago(pagoId: Int) async throws {
@@ -501,28 +582,31 @@ class PagoService {
                 "recargos": AnyJSON.null,
                 "cobrador_id": AnyJSON.null,
                 "fecha_visita_sin_pago": AnyJSON.null,
-                "estado": AnyJSON.string("pendiente")  // ← vuelve a pendiente
+                "estado": AnyJSON.string("pendiente"),  // ← vuelve a pendiente
             ])
             .eq("id", value: pagoId)
             .execute()
     }
-    
-    func fetchEstadisticasCobrador(cobradorId: UUID, fecha: Date) async throws -> (totalCobros: Int, totalRecaudado: Double) {
+
+    func fetchEstadisticasCobrador(cobradorId: UUID, fecha: Date) async throws
+        -> (totalCobros: Int, totalRecaudado: Double)
+    {
         let calendar = Calendar.current
         let inicioDia = calendar.startOfDay(for: fecha)
         let finDia = calendar.date(byAdding: .day, value: 1, to: inicioDia)!
-        
+
         let formatter = ISO8601DateFormatter()
         formatter.timeZone = TimeZone.current
-        
+
         struct MontoPago: Decodable {
             let montoPagado: Double
             enum CodingKeys: String, CodingKey {
                 case montoPagado = "monto_pagado"
             }
         }
-        
-        let response: [MontoPago] = try await supabase
+
+        let response: [MontoPago] =
+            try await supabase
             .from("pagos")
             .select("monto_pagado")
             .eq("cobrador_id", value: cobradorId.uuidString)
@@ -531,7 +615,7 @@ class PagoService {
             .not("fecha_pago", operator: .is, value: "null")
             .execute()
             .value
-        
+
         return (response.count, response.map { $0.montoPagado }.reduce(0, +))
     }
 }
