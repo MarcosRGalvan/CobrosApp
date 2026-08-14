@@ -8,9 +8,14 @@
 import SwiftUI
 
 struct CobrosDiariosView: View {
+    @Environment(AuthViewModel.self) private var authViewModel
     @State private var viewModel = CobrosDiariosViewModel()
     @State private var pagoSeleccionado: Pago? = nil
     @State private var tabSeleccionada = 0
+    
+    private var esAdmin: Bool {
+        authViewModel.usuarioActual?.rol == .admin
+    }
     
     var body: some View {
         VStack(spacing: 10) {
@@ -38,8 +43,8 @@ struct CobrosDiariosView: View {
         }
         .navigationTitle("Cobros del Día")
         .searchable(text: $viewModel.textoBusqueda, prompt: "Buscar cliente...")
-        .onAppear { viewModel.cargarCobrosDeHoy() }
-        .refreshable { viewModel.cargarCobrosDeHoy() }
+        .onAppear { viewModel.cargarCobrosDeHoy(esAdmin: esAdmin) }
+        .refreshable { viewModel.cargarCobrosDeHoy(esAdmin: esAdmin) }
         .navigationDestination(item: $pagoSeleccionado) { pago in
             DetallePagoView(pago: pago, cliente: pago.prestamos?.clientes)
         }

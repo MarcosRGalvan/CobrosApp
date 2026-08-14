@@ -13,6 +13,7 @@ struct DetalleClienteView: View {
     @State private var viewModel: DetalleClienteViewModel
     @Environment(AuthViewModel.self) private var auth
     @State private var mostrarEdicion = false
+    @State private var mostrarMapaCompleto = false
     
     private var nombreCompleto: String {
         [cliente.nombre, cliente.appaterno, cliente.apmaterno]
@@ -112,6 +113,18 @@ struct DetalleClienteView: View {
                     .frame(height: 220)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .listRowInsets(EdgeInsets())
+                    .allowsHitTesting(true)
+                    .overlay(alignment: .bottomTrailing) {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.caption)
+                            .padding(6)
+                            .background(.thinMaterial, in: Circle())
+                            .padding(8)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        mostrarMapaCompleto = true
+                    }
                 }
             }
         }
@@ -137,6 +150,11 @@ struct DetalleClienteView: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: $mostrarMapaCompleto) {
+            if let coordenada {
+                MapaCompletoView(nombre: nombreCompleto, coordenada: coordenada)
+            }
+        }
         .onAppear {
             if let coordenada {
                 cameraPosition = .region(
@@ -152,20 +170,17 @@ struct DetalleClienteView: View {
 
 #Preview {
     NavigationStack {
-        CrearClienteView(viewModel: ClienteViewModel())
+        DetalleClienteView(cliente: Cliente(
+            id: Int(),
+            nombre: "Juan",
+            appaterno: "Pérez",
+            apmaterno: "López",
+            telefono: "4611234567",
+            direccion: "Av. Reforma 123, Celaya, Gto",
+            email: "juan.perez@ejemplo.com",
+            latitud: 20.5217,
+            longitud: -100.8156
+        ))
     }
-}
-
-#Preview("Editar") {
-    NavigationStack {
-        CrearClienteView(
-            viewModel: ClienteViewModel(),
-            cliente: Cliente(
-                nombre: "Marco", appaterno: "Ramirez", apmaterno: "Galvan",
-                telefono: "4353453454", direccion: "Calle Falsa 123",
-                email: "marco@email.com", organizacionId: nil,
-                latitud: 20.5217, longitud: -100.8157
-            )
-        )
-    }
+    .environment(AuthViewModel())
 }

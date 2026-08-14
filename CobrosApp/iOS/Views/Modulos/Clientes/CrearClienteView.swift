@@ -22,6 +22,11 @@ struct CrearClienteView: View {
     @State private var direccion: String = ""
     @State private var email: String = ""
     @State private var coordenada: CLLocationCoordinate2D?
+    @State private var documentoTipo: String = "ine"
+    @State private var imagenDocumento: UIImage?
+    @State private var mostrarSelectorFuente = false
+    @State private var mostrarImagePicker = false
+    @State private var fuenteImagen: ImagePicker.Fuente = .camara
     
     private var esEdicion: Bool { clienteExistente != nil }
     
@@ -63,6 +68,28 @@ struct CrearClienteView: View {
                     .autocorrectionDisabled()
             }
             
+            Section(header: Text("Identificación")) {
+                Picker("Tipo de documento", selection: $documentoTipo) {
+                    Text("INE").tag("ine")
+                    Text("Licencia de conducir").tag("licencia")
+                    Text("Comprobante de domicilio").tag("comprobante_domicilio")
+                }
+                
+                if let imagenDocumento {
+                    Image(uiImage: imagenDocumento)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 180)
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .onTapGesture { mostrarSelectorFuente = true }
+                }
+                
+                Button(imagenDocumento == nil ? "Agregar foto del documento" : "Cambiar foto") {
+                    mostrarSelectorFuente = true
+                }
+            }
+            
             Section(header: Text("Ubicación del domicilio")) {
                 UbicacionMapaView(coordenada: $coordenada)
             }
@@ -91,6 +118,21 @@ struct CrearClienteView: View {
             Button("OK", role: .cancel) { }
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        .confirmationDialog("Foto del documento", isPresented: $mostrarSelectorFuente) {
+            Button("Tomar foto") {
+                fuenteImagen = .camara
+                mostrarImagePicker = true
+            }
+            Button("Elegir de galeria") {
+                fuenteImagen = .galeria
+                mostrarImagePicker = true
+            }
+            Button("Cancelar", role: .cancel) {}
+        }
+        .sheet(isPresented: $mostrarImagePicker) {
+            ImagePicker(fuente: fuenteImagen, imagenSeleccionada: $imagenDocumento)
+                .ignoresSafeArea()
         }
     }
     
@@ -125,7 +167,16 @@ struct CrearClienteView: View {
             resultado = await viewModel.crearCliente(clienteAGuardar)
         }
         
-        guard let resultado else { return }
+        guard let resultado, let clienteId = resultado.id else { return }
+        
+        /*if let imagenDocumento {
+            _ = await viewModel.subirDocumentoIdentificacion(
+                image: imagenDocumento,
+                tipo: documentoTipo,
+                clienteId: clienteId,
+                organizacionId: resultado.organizacionId ?? UUID()
+            )
+        }*/
 
         if let callback = onCreate {
             callback(resultado)

@@ -19,6 +19,8 @@ struct Cliente: Identifiable, Codable, Hashable {
     var latitud: Double?
     var longitud: Double?
     var rutaId: UUID?
+    var documentoTipo: String?
+    var documentoPath: String?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -32,5 +34,7 @@ struct Cliente: Identifiable, Codable, Hashable {
         case latitud
         case longitud
         case rutaId = "ruta_id"
+        case documentoTipo = "documento_tipo"
+        case documentoPath = "documento_path"
     }
 }

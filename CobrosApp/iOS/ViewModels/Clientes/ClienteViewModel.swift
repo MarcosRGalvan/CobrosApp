@@ -7,6 +7,7 @@
 
 import Foundation
 import Supabase
+import UIKit
 
 @Observable
 class ClienteViewModel {
@@ -165,7 +166,7 @@ class ClienteViewModel {
             let encoder = JSONEncoder()
             encoder.keyEncodingStrategy = .convertToSnakeCase
             if let data = try? encoder.encode(cliente),
-               let json = String(data: data, encoding: .utf8) {
+               let _ = String(data: data, encoding: .utf8) {
                 // print("📤 JSON a actualizar: \(json)")
             }
             
@@ -186,6 +187,45 @@ class ClienteViewModel {
                 self.isLoading = false
             }
             
+            return nil
+        }
+    }
+    
+    // Sube el documento de identificacion del cliente
+    func subirDocumentoIdentificacion(
+        image: UIImage,
+        tipo: String,
+        clienteId: UUID,
+        organizacionId: UUID
+    ) async -> String? {
+        guard let data = image.jpegData(compressionQuality: 0.6) else {
+            errorMessage = "No se pudo procesar la imagen"
+            return nil
+        }
+        
+        let path = "\(organizacionId.uuidString)/\(clienteId.uuidString)/documento.jpg"
+        
+        isLoading = true
+        defer { isLoading = false }
+        
+        do {
+            try await SupabaseManager.shared.client.storage
+                .from("identificaciones")
+                .upload(
+                    path,
+                    data: data,
+                    options: FileOptions(contentType: "image/jpeg", upsert: true)
+                )
+            
+            try await SupabaseManager.shared.client
+                .from("clientes")
+                .update(["documento_tipo": tipo, "documento_path": path])
+                .eq("id", value: clienteId.uuidString)
+                .execute()
+            
+            return path
+        } catch {
+            errorMessage = "No se pudo subir el documento de identificación: \(error.localizedDescription)"
             return nil
         }
     }

@@ -19,6 +19,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		5D35141B30268180008C7785 /* Exceptions for "CobrosApp" folder in "CobrosApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 5DBF2A5F2FBD3BDA00294A55 /* CobrosApp */;
+		};
 		5DED7DE230016C3F00047B1B /* Exceptions for "CobrosApp" folder in "CobrosAdmin" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -49,6 +56,7 @@
 		5DBF2A622FBD3BDA00294A55 /* CobrosApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				5D35141B30268180008C7785 /* Exceptions for "CobrosApp" folder in "CobrosApp" target */,
 				5DED7DE230016C3F00047B1B /* Exceptions for "CobrosApp" folder in "CobrosAdmin" target */,
 			);
 			path = CobrosApp;
@@ -351,14 +359,19 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = CobrosAppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 593W6285R7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CobrosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "CobrosApp necesita acceso a la cámara para fotografiar la identificación del cliente";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "La app solicita la ubicacion para determinar las coordenadas de la direccion del cliente";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Necesitamos tu ubicación para registrar el domicilio del cliente.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "CobrosApp necesita acceso a tus fotos para adjuntar la identificación del cliente";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -371,6 +384,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = mx.com.marcoramirezg.CobrosApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -387,14 +401,19 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = CobrosAppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 593W6285R7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CobrosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "CobrosApp necesita acceso a la cámara para fotografiar la identificación del cliente";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "La app solicita la ubicacion para determinar las coordenadas de la direccion del cliente";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Necesitamos tu ubicación para registrar el domicilio del cliente.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "CobrosApp necesita acceso a tus fotos para adjuntar la identificación del cliente";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -407,6 +426,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = mx.com.marcoramirezg.CobrosApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;

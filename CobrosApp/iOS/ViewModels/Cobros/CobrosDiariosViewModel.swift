@@ -60,21 +60,21 @@ class CobrosDiariosViewModel {
     
     // MARK: - Carga
     
-    func cargarCobrosDeHoy() {
+    func cargarCobrosDeHoy(esAdmin: Bool) {
         tareaActual?.cancel()
         tareaActual = Task {
             await MainActor.run { isLoading = true }
             do {
-                let rutaId = try await RutaService().fetchRutaIdDelCobrador()
-                if rutaId == nil {
-                    await MainActor.run {
-                        sinRutaAsignada = true
-                        isLoading = false
+                if !esAdmin {
+                    let rutaId = try await RutaService().fetchRutaIdDelCobrador()
+                    if rutaId == nil {
+                        await MainActor.run {
+                            sinRutaAsignada = true
+                            isLoading = false
+                        }
+                        return
                     }
-                    return
                 }
-                
-                let resultado  = try await service.fetchCobrosDiarios()
                 
                 async let pendientes = service.fetchCobrosDiarios()
                 async let pagados = service.fetchCobrosDelDiaPorEstado(estado: "pagado")
@@ -87,8 +87,8 @@ class CobrosDiariosViewModel {
                     cobrosPageados = pg
                     cobrosSinPagar = sp
                     isLoading = false
-                    // print("✅ Pendientes: \(p.count), Pagados: \(pg.count), Sin pagar: \(sp.count)")
                 }
+                
             } catch is CancellationError {
                 // print("⚠️ Cancelado")
             } catch {

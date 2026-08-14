@@ -618,6 +618,17 @@ class PagoService {
 
         return (response.count, response.map { $0.montoPagado }.reduce(0, +))
     }
+    
+    func totalCuotasResuletas(prestamoId: Int) async throws -> Int {
+        let response = try await supabase
+            .from("pagos")
+            .select("id", head: false, count: .exact)
+            .eq("prestamo_id", value: prestamoId)
+            .neq("estado", value: "pendiente")
+            .execute()
+        
+        return response.count ?? 0
+    }
 }
 
 extension Double {
