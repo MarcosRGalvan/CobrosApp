@@ -51,7 +51,7 @@ struct ContentView: View {
         NavigationStack(path: $path) {                  // ← path aquí
             ZStack(alignment: .top) {
                 LinearGradient(
-                    gradient: Gradient(colors: [Color.blue.opacity(0.9), Color.clear]),
+                    gradient: Gradient(colors: [Color("AppPrimary"), Color.clear]),
                     startPoint: .top,
                     endPoint: .center
                 )
@@ -145,7 +145,7 @@ private struct Tile: View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 28, weight: .semibold))
-                .foregroundStyle(.blue)
+                .foregroundStyle(Color("AppAlert"))
                 .frame(width: 44, height: 44)
                 .background(.thinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -155,6 +155,7 @@ private struct Tile: View {
                 .foregroundStyle(.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
+                .foregroundStyle(Color("AppAlert"))
         }
         .frame(maxWidth: .infinity, minHeight: 100)
         .padding()

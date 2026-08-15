@@ -30,6 +30,14 @@ struct CrearClienteView: View {
     
     private var esEdicion: Bool { clienteExistente != nil }
     
+    private var degradado: LinearGradient {
+        LinearGradient(
+            colors: [Color("AppPrimary"), Color("AppPrimary").opacity(0.0)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+    
     init(viewModel: ClienteViewModel, cliente: Cliente? = nil, onCreate: ((Cliente) -> Void)? = nil) {
         self.viewModel = viewModel
         self.onCreate = onCreate
@@ -48,52 +56,62 @@ struct CrearClienteView: View {
     }
     
     var body: some View {
-        Form {
-            Section(header: Text("Información Personal")) {
-                TextField("Nombre(s)", text: $nombre)
-                    .autocorrectionDisabled()
-                TextField("Apellido paterno", text: $appaterno)
-                    .autocorrectionDisabled()
-                TextField("Apellido materno", text: $apmaterno)
-                    .autocorrectionDisabled()
+        ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                degradado
+                    .frame(height: UIScreen.main.bounds.height / 2)
+                    .ignoresSafeArea()
+                Spacer()
             }
             
-            Section(header: Text("Contacto")) {
-                TextField("Teléfono (10 dígitos)", text: $telefono)
-                    .keyboardType(.phonePad)
-                TextField("Dirección completa", text: $direccion)
-                TextField("Correo electrónico", text: $email)
-                    .keyboardType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-            }
-            
-            Section(header: Text("Identificación")) {
-                Picker("Tipo de documento", selection: $documentoTipo) {
-                    Text("INE").tag("ine")
-                    Text("Licencia de conducir").tag("licencia")
-                    Text("Comprobante de domicilio").tag("comprobante_domicilio")
+            Form {
+                Section(header: Text("Información Personal")) {
+                    TextField("Nombre(s)", text: $nombre)
+                        .autocorrectionDisabled()
+                    TextField("Apellido paterno", text: $appaterno)
+                        .autocorrectionDisabled()
+                    TextField("Apellido materno", text: $apmaterno)
+                        .autocorrectionDisabled()
                 }
                 
-                if let imagenDocumento {
-                    Image(uiImage: imagenDocumento)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 180)
-                        .frame(maxWidth: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .onTapGesture { mostrarSelectorFuente = true }
+                Section(header: Text("Contacto")) {
+                    TextField("Teléfono (10 dígitos)", text: $telefono)
+                        .keyboardType(.phonePad)
+                    TextField("Dirección completa", text: $direccion)
+                    TextField("Correo electrónico", text: $email)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
                 }
                 
-                Button(imagenDocumento == nil ? "Agregar foto del documento" : "Cambiar foto") {
-                    mostrarSelectorFuente = true
+                Section(header: Text("Identificación")) {
+                    Picker("Tipo de documento", selection: $documentoTipo) {
+                        Text("INE").tag("ine")
+                        Text("Licencia de conducir").tag("licencia")
+                        Text("Comprobante de domicilio").tag("comprobante_domicilio")
+                    }
+                    
+                    if let imagenDocumento {
+                        Image(uiImage: imagenDocumento)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 180)
+                            .frame(maxWidth: .infinity)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .onTapGesture { mostrarSelectorFuente = true }
+                    }
+                    
+                    Button(imagenDocumento == nil ? "Agregar foto del documento" : "Cambiar foto") {
+                        mostrarSelectorFuente = true
+                    }
                 }
-            }
-            
-            Section(header: Text("Ubicación del domicilio")) {
-                UbicacionMapaView(coordenada: $coordenada)
+                
+                Section(header: Text("Ubicación del domicilio")) {
+                    UbicacionMapaView(coordenada: $coordenada)
+                }
             }
         }
+        .scrollContentBackground(.hidden)
         .navigationTitle(esEdicion ? "Editar Cliente" : "Nuevo Cliente")
         .interactiveDismissDisabled(viewModel.isLoading)
         .toolbar {
@@ -108,6 +126,7 @@ struct CrearClienteView: View {
                     }
                     .fontWeight(.bold)
                     .buttonStyle(.borderedProminent)
+                    .tint(Color("AppDark"))
                 }
             }
         }
@@ -167,16 +186,16 @@ struct CrearClienteView: View {
             resultado = await viewModel.crearCliente(clienteAGuardar)
         }
         
-        guard let resultado, let clienteId = resultado.id else { return }
+        guard let resultado, let clienteId = resultado.id, let organizacionId = resultado.organizacionId else { return }
         
-        /*if let imagenDocumento {
+        if let imagenDocumento {
             _ = await viewModel.subirDocumentoIdentificacion(
                 image: imagenDocumento,
                 tipo: documentoTipo,
                 clienteId: clienteId,
                 organizacionId: resultado.organizacionId ?? UUID()
             )
-        }*/
+        }
 
         if let callback = onCreate {
             callback(resultado)

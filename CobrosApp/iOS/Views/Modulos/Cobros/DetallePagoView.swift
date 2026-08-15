@@ -15,6 +15,15 @@ struct DetallePagoView: View {
     @Environment(AuthViewModel.self) private var auth
     @State private var modoEdicionAdmin = false
     
+    // 🎨 Gradiente para la mitad superior de la pantalla
+    private var degradadoSuperior: LinearGradient {
+        LinearGradient(
+            colors: [Color("AppPrimary"), Color("AppPrimary").opacity(0.0)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+    
     init(pago: Pago, cliente: ClienteAnidado?) {
         _viewModel = State(initialValue: DetallePagoViewModel(pago: pago, cliente: cliente))
     }
@@ -36,194 +45,205 @@ struct DetallePagoView: View {
     }
 
     var body: some View {
-        Form {
-            Section(header: Text("Datos del Cliente")) {
-                VStack(alignment: .leading, spacing: 12) {
-                    Label {
-                        Text("\(viewModel.cliente?.nombre ?? "") \(viewModel.cliente?.appaterno ?? "") \(viewModel.cliente?.apmaterno ?? "")")
-                            .font(.title2)
-                            .bold()
-                    } icon: {
-                        Image(systemName: "person.crop.circle.fill")
-                    }
-                    
-                    if let direccion = viewModel.cliente?.direccion, !direccion.isEmpty {
-                        Label {
-                            Text(direccion)
-                        } icon: {
-                            Image(systemName: "mappin.and.ellipse")
-                        }
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    }
-                    
-                    if let telefono = viewModel.cliente?.telefono, !telefono.isEmpty {
-                        Label {
-                            Text(telefono)
-                        } icon: {
-                            Image(systemName: "phone.fill")
-                        }
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    }
-                    
-                    if let email = viewModel.cliente?.email, !email.isEmpty {
-                        Label {
-                            Text(email)
-                        } icon: {
-                            Image(systemName: "envelope.fill")
-                        }
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    }
-                }
+        ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                degradadoSuperior
+                    .frame(height: UIScreen.main.bounds.height / 2)
+                    .ignoresSafeArea(edges: .top)
+                Spacer()
             }
             
-            Section(header: Text("Detalles del Pago")) {
-                if let totalCuotas = viewModel.pago.prestamos?.cuotas {
+            Form {
+                Section(header: Text("Datos del Cliente")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label {
+                            Text("\(viewModel.cliente?.nombre ?? "") \(viewModel.cliente?.appaterno ?? "") \(viewModel.cliente?.apmaterno ?? "")")
+                                .font(.title2)
+                                .bold()
+                        } icon: {
+                            Image(systemName: "person.crop.circle.fill")
+                                .foregroundStyle(Color("AppPrimary"))
+                        }
+                        
+                        if let direccion = viewModel.cliente?.direccion, !direccion.isEmpty {
+                            Label {
+                                Text(direccion)
+                            } icon: {
+                                Image(systemName: "mappin.and.ellipse")
+                            }
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        }
+                        
+                        if let telefono = viewModel.cliente?.telefono, !telefono.isEmpty {
+                            Label {
+                                Text(telefono)
+                            } icon: {
+                                Image(systemName: "phone.fill")
+                            }
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        }
+                        
+                        if let email = viewModel.cliente?.email, !email.isEmpty {
+                            Label {
+                                Text(email)
+                            } icon: {
+                                Image(systemName: "envelope.fill")
+                            }
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                
+                Section(header: Text("Detalles del Pago")) {
+                    if let totalCuotas = viewModel.pago.prestamos?.cuotas {
+                        Label {
+                            Text("Pagos realizados: \(viewModel.totalPagosRealizados) de \(totalCuotas)")
+                        } icon: {
+                            Image(systemName: "checkmark.gobackward")
+                                .foregroundStyle(.cyan)
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    }
+                    
                     Label {
-                        Text("Pagos realizados: \(viewModel.totalPagosRealizados) de \(totalCuotas)")
+                        Text("Saldo restante: \(viewModel.saldoRestante, format: .currency(code: "MXN"))")
                     } icon: {
-                        Image(systemName: "checkmark.gobackward")
+                        Image(systemName: "creditcard.and.123")
                             .foregroundStyle(.cyan)
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                }
-                
-                Label {
-                    Text("Saldo restante: \(viewModel.saldoRestante, format: .currency(code: "MXN"))")
-                } icon: {
-                    Image(systemName: "creditcard.and.123")
-                        .foregroundStyle(.cyan)
-                }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
                     
-                Label {
-                    Text("Total Pago: \(viewModel.pago.montoPagado, format: .currency(code: "MXN"))")
-                } icon: {
-                    Image(systemName: "dollarsign.circle.fill")
-                        .foregroundStyle(.yellow)
-                }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                    
-                if viewModel.isLoadingFormasPago {
-                    ProgressView("Cargando formas de pago...")
-                } else {
-                    HStack {
-                        Label("", systemImage: "creditcard.fill")
-                        Picker("Forma de Pago", selection: $viewModel.formaPagoSeleccionada) {
-                            Text("Selecciona").tag(Int?.none)
-                            ForEach(viewModel.formasPago) { forma in
-                                Text(forma.descripcion).tag(forma.id)
-                            }
-                        }
-                        .disabled(camposDeshabilitados)
+                    Label {
+                        Text("Total Pago: \(viewModel.pago.montoPagado, format: .currency(code: "MXN"))")
+                    } icon: {
+                        Image(systemName: "dollarsign.circle.fill")
+                            .foregroundStyle(.yellow)
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                }
                     
-                VStack(spacing: 16) {
-                    TextField("$0.00", text: $viewModel.montoIngresado)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.center)
-                        .font(.title)
-                        .bold()
-                        .disabled(camposDeshabilitados)
-                    
-                    VStack(spacing: 4) {
+                    if viewModel.isLoadingFormasPago {
+                        ProgressView("Cargando formas de pago...")
+                    } else {
                         HStack {
-                            Text("Intereses:")
-                            Spacer()
-                            Text(viewModel.pagoIntereses, format: .currency(code: "MXN"))
+                            Label("", systemImage: "creditcard.fill")
+                            Picker("Forma de Pago", selection: $viewModel.formaPagoSeleccionada) {
+                                Text("Selecciona").tag(Int?.none)
+                                ForEach(viewModel.formasPago) { forma in
+                                    Text(forma.descripcion).tag(forma.id)
+                                }
+                            }
+                            .disabled(camposDeshabilitados)
                         }
-                        if viewModel.estaVencido {
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    }
+                    
+                    VStack(spacing: 16) {
+                        TextField("$0.00", text: $viewModel.montoIngresado)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.center)
+                            .font(.title)
+                            .bold()
+                            .disabled(camposDeshabilitados)
+                        
+                        VStack(spacing: 4) {
                             HStack {
-                                Text("Recargo")
-                                    .foregroundStyle(.red)
+                                Text("Intereses:")
                                 Spacer()
-                                Text(viewModel.recargos, format: .currency(code: "MXN"))
-                                    .foregroundStyle(.red)
+                                Text(viewModel.pagoIntereses, format: .currency(code: "MXN"))
+                            }
+                            if viewModel.estaVencido {
+                                HStack {
+                                    Text("Recargo")
+                                        .foregroundStyle(.red)
+                                    Spacer()
+                                    Text(viewModel.recargos, format: .currency(code: "MXN"))
+                                        .foregroundStyle(.red)
+                                }
+                            }
+                            HStack {
+                                Text("Abono a capital:")
+                                Spacer()
+                                Text(viewModel.abonoCapital, format: .currency(code: "MXN"))
                             }
                         }
-                        HStack {
-                            Text("Abono a capital:")
-                            Spacer()
-                            Text(viewModel.abonoCapital, format: .currency(code: "MXN"))
-                        }
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                         
-                    Button {
-                        Task {
+                        Button {
+                            Task {
+                                if viewModel.isGuardando {
+                                    await viewModel.actualizarPago()
+                                } else {
+                                    await viewModel.registrarPago()
+                                }
+                            }
+                        } label: {
                             if viewModel.isGuardando {
-                                await viewModel.actualizarPago()
+                                ProgressView().frame(maxWidth: .infinity)
                             } else {
-                                await viewModel.registrarPago()
+                                Text(modoEdicionAdmin ? "Guardar correción" : (viewModel.yaPagado ? "Pago Registrado" : "Registrar Pago"))
+                                    .frame(maxWidth: .infinity)
                             }
                         }
-                    } label: {
-                        if viewModel.isGuardando {
-                            ProgressView().frame(maxWidth: .infinity)
-                        } else {
-                            Text(modoEdicionAdmin ? "Guardar correción" : (viewModel.yaPagado ? "Pago Registrado" : "Registrar Pago"))
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .disabled(viewModel.isGuardando || camposDeshabilitados)
-                    .tint(viewModel.yaPagado ? .gray : .blue)
-                    
-                    HStack {
-                        Button {
-                            mostrarHistorial = true
-                        } label: {
-                            Text("Historial de pagos")
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(.green)
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                        .disabled(viewModel.isGuardando || camposDeshabilitados)
+                        .tint(viewModel.yaPagado ? .gray : Color("AppPrimary"))
                         
-                        Button {
-                            mostrarConfirmacionSinPago = true
-                        } label: {
-                            if viewModel.isRegistrandoVisita {
-                                ProgressView()
-                            } else {
-                                Text(textoBotonSinPago)
-                                    .foregroundStyle(colorTextoBotonSinPago)
-                            }
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(colorTintBotonSinPago)
-                        .disabled(viewModel.yaPagado || viewModel.visitaSinPagoRegistrada || viewModel.isRegistrandoVisita)
-                    }
-                    
-                    if auth.esAdmin && viewModel.yaPagado {
                         HStack {
                             Button {
-                                modoEdicionAdmin.toggle()
+                                mostrarHistorial = true
                             } label: {
-                                Text(modoEdicionAdmin ? "Cancelar edición" : "Editar pago")
+                                Text("Historial de pagos")
                             }
                             .buttonStyle(.bordered)
-                            .tint(.orange)
+                            .tint(.green)
                             
                             Button {
-                                viewModel.mostrarConfirmacionRevertir = true
+                                mostrarConfirmacionSinPago = true
                             } label: {
-                                Text("Revertir Pago")
+                                if viewModel.isRegistrandoVisita {
+                                    ProgressView()
+                                } else {
+                                    Text(textoBotonSinPago)
+                                        .foregroundStyle(colorTextoBotonSinPago)
+                                }
                             }
                             .buttonStyle(.bordered)
-                            .tint(.red)
+                            .tint(colorTintBotonSinPago)
+                            .disabled(viewModel.yaPagado || viewModel.visitaSinPagoRegistrada || viewModel.isRegistrandoVisita)
+                        }
+                        
+                        if auth.esAdmin && viewModel.yaPagado {
+                            HStack {
+                                Button {
+                                    modoEdicionAdmin.toggle()
+                                } label: {
+                                    Text(modoEdicionAdmin ? "Cancelar edición" : "Editar pago")
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(.orange)
+                                
+                                Button {
+                                    viewModel.mostrarConfirmacionRevertir = true
+                                } label: {
+                                    Text("Revertir Pago")
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(.red)
+                            }
                         }
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
         }
         .navigationTitle("Detalle del Pago")
         .sheet(isPresented: $mostrarHistorial) {
@@ -235,6 +255,8 @@ struct DetallePagoView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Cerrar") { mostrarHistorial = false }
+                            .buttonStyle(.borderedProminent)
+                            .tint(Color("AppPrimary"))
                     }
                 }
             }
@@ -301,12 +323,35 @@ struct DetallePagoView: View {
     }
 }
 
-/*
 #Preview {
-    DetallePagoView(
-        pago: Pago(id: 45, prestamoId: 22, fechaPago: nil, montoPagado: 500, abonoCapital: 0, pagoIntereses: 0, recargos: 0, numeroCuota: 3, fechaVencimiento: nil, referenciaPago: "", formaPagoId: nil, prestamos: nil, organizacionId: nil, fechaVisitaSinPago: nil, cobradorId: nil),
-            
-            cliente: ClienteAnidado(nombre: "Marco", appaterno: "Ramirez", apmaterno: "Galvan", telefono: "4353453454", direccion: "Calle Falsa 123", email: "marco@email.com")
+    NavigationStack {
+        DetallePagoView(
+            pago: Pago(
+                id: 45,
+                prestamoId: 22,
+                fechaPago: nil,
+                montoPagado: 500,
+                abonoCapital: 0,
+                pagoIntereses: 0,
+                recargos: 0,
+                numeroCuota: 3,
+                fechaVencimiento: nil,
+                referenciaPago: "",
+                formaPagoId: nil,
+                prestamos: nil,
+                organizacionId: nil,
+                fechaVisitaSinPago: nil,
+                cobradorId: nil
+            ),
+            cliente: ClienteAnidado(
+                nombre: "Marco",
+                appaterno: "Ramirez",
+                apmaterno: "Galvan",
+                telefono: "4353453454",
+                direccion: "Calle Falsa 123",
+                email: "marco@email.com"
+            )
         )
+        .environment(AuthViewModel())
+    }
 }
-*/

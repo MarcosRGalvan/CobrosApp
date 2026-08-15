@@ -17,6 +17,14 @@ struct CobrosDiariosView: View {
         authViewModel.usuarioActual?.rol == .admin
     }
     
+    private var fondoEncabezado: LinearGradient {
+        LinearGradient(
+            colors: [Color("AppPrimary"), Color("AppPrimary").opacity(0.85)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+    
     var body: some View {
         VStack(spacing: 10) {
             Picker("", selection: $tabSeleccionada) {
@@ -42,6 +50,9 @@ struct CobrosDiariosView: View {
             }
         }
         .navigationTitle("Cobros del Día")
+        .toolbarBackground(fondoEncabezado, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        //.toolbarColorScheme(.dark, for: .navigationBar)
         .searchable(text: $viewModel.textoBusqueda, prompt: "Buscar cliente...")
         .onAppear { viewModel.cargarCobrosDeHoy(esAdmin: esAdmin) }
         .refreshable { viewModel.cargarCobrosDeHoy(esAdmin: esAdmin) }
@@ -281,4 +292,5 @@ struct CobroDiariosRow: View {
     NavigationStack {
         CobrosDiariosView()
     }
+    .environment(AuthViewModel())
 }

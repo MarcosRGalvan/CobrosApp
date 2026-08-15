@@ -14,83 +14,101 @@ enum ClienteDestino: Hashable {
 }
 
 struct ClientesListView: View {
-    @Binding var path: NavigationPath              // ← recibe el path del padre
+    @Binding var path: NavigationPath
     @State private var viewModel = ClienteViewModel()
     
+    private var degradado: LinearGradient {
+        LinearGradient(
+            colors: [Color("AppPrimary"), Color("AppPrimary").opacity(0.0)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+    
     var body: some View {
-        List {
-            if viewModel.clientesFiltrados.isEmpty && !viewModel.isLoading {
-                ContentUnavailableView(
-                    "No hay clientes",
-                    systemImage: "person.2.slash",
-                    description: Text("Presiona el botón de más para agregar uno nuevo.")
-                )
-            } else {
-                ForEach(viewModel.clientesFiltrados) { cliente in
-                    NavigationLink(value: ClienteDestino.detalleCliente(cliente)) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(nombreCompleto(cliente))
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            
-                            HCenterRow(icon: "phone.fill", text: cliente.telefono)
-                            HCenterRow(icon: "mappin.and.ellipse", text: cliente.direccion ?? "")
-                            HCenterRow(icon: "envelope", text: cliente.email ?? "")
+        ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                degradado
+                    .frame(height: UIScreen.main.bounds.height / 2)
+                    .ignoresSafeArea(edges: .top)
+                Spacer()
+            }
+            
+            List {
+                if viewModel.clientesFiltrados.isEmpty && !viewModel.isLoading {
+                    ContentUnavailableView(
+                        "No hay clientes",
+                        systemImage: "person.2.slash",
+                        description: Text("Presiona el botón de más para agregar uno nuevo.")
+                    )
+                } else {
+                    ForEach(viewModel.clientesFiltrados) { cliente in
+                        NavigationLink(value: ClienteDestino.detalleCliente(cliente)) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(nombreCompleto(cliente))
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                                
+                                HCenterRow(icon: "phone.fill", text: cliente.telefono)
+                                HCenterRow(icon: "mappin.and.ellipse", text: cliente.direccion ?? "")
+                                HCenterRow(icon: "envelope", text: cliente.email ?? "")
+                            }
+                            .padding(.vertical, 4)
                         }
-                        .padding(.vertical, 4)
                     }
                 }
             }
-        }
-        .navigationTitle("Clientes")
-        .searchable(text: $viewModel.textoBusqueda, prompt: "Buscar por nombre o teléfono")
-        .overlay {
-            if viewModel.isLoading && viewModel.clientes.isEmpty {
-                ProgressView("Conectando con el servidor...")
-                    .padding()
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-            }
-        }
-        .alert("Error", isPresented: mostrarError) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text(viewModel.errorMessage ?? "")
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    path.append(ClienteDestino.crearCliente)
-                } label: {
-                    Image(systemName: "plus")
+            .scrollContentBackground(.hidden)
+            .navigationTitle("Clientes")
+            .searchable(text: $viewModel.textoBusqueda, prompt: "Buscar por nombre o teléfono")
+            .overlay {
+                if viewModel.isLoading && viewModel.clientes.isEmpty {
+                    ProgressView("Conectando con el servidor...")
+                        .padding()
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
             }
-        }
-        .navigationDestination(for: ClienteDestino.self) { destino in
-            switch destino {
-            case .crearCliente:
-                CrearClienteView(viewModel: viewModel) { clienteCreado in
-                    Task { @MainActor in
-                        path.append(ClienteDestino.crearPrestamo(clienteCreado))
+            .alert("Error", isPresented: mostrarError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(viewModel.errorMessage ?? "")
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        path.append(ClienteDestino.crearCliente)
+                    } label: {
+                        Image(systemName: "plus")
                     }
                 }
-            case .crearPrestamo(let cliente):
-                CreatePrestamoView(
-                    viewModel: PrestamoViewModel(),
-                    clientePreseleccionado: cliente
-                ) {
-                    path = NavigationPath()
-                    path.append(HomeDestination.prestamos)
-                }
-            case .detalleCliente(let cliente):
-                DetalleClienteView(cliente: cliente)
             }
-        }
-        .task {
-            await viewModel.fetchClientes()
-        }
-        .refreshable {
-            await viewModel.fetchClientes()
+            .navigationDestination(for: ClienteDestino.self) { destino in
+                switch destino {
+                case .crearCliente:
+                    CrearClienteView(viewModel: viewModel) { clienteCreado in
+                        Task { @MainActor in
+                            path.append(ClienteDestino.crearPrestamo(clienteCreado))
+                        }
+                    }
+                case .crearPrestamo(let cliente):
+                    CreatePrestamoView(
+                        viewModel: PrestamoViewModel(),
+                        clientePreseleccionado: cliente
+                    ) {
+                        path = NavigationPath()
+                        path.append(HomeDestination.prestamos)
+                    }
+                case .detalleCliente(let cliente):
+                    DetalleClienteView(cliente: cliente)
+                }
+            }
+            .task {
+                await viewModel.fetchClientes()
+            }
+            .refreshable {
+                await viewModel.fetchClientes()
+            }
         }
     }
     
@@ -125,10 +143,21 @@ private struct HCenterRow: View {
     }
 }
 
-
-
 #Preview {
-    NavigationStack {
+    struct PreviewWrapper: View {
+        @State private var path = NavigationPath()
         
+        @State private var viewModel: ClienteViewModel = {
+            let vm = ClienteViewModel()
+            vm.clientes = Cliente.listaMock
+            return vm
+        }()
+        
+        var body: some View {
+            NavigationStack(path: $path) {
+                ClientesListView(path: $path)
+            }
+        }
     }
+    return PreviewWrapper()
 }

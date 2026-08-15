@@ -195,7 +195,7 @@ class ClienteViewModel {
     func subirDocumentoIdentificacion(
         image: UIImage,
         tipo: String,
-        clienteId: UUID,
+        clienteId: Int,
         organizacionId: UUID
     ) async -> String? {
         guard let data = image.jpegData(compressionQuality: 0.6) else {
@@ -203,7 +203,7 @@ class ClienteViewModel {
             return nil
         }
         
-        let path = "\(organizacionId.uuidString)/\(clienteId.uuidString)/documento.jpg"
+        let path = "\(organizacionId.uuidString.lowercased())/\(clienteId)/documento.jpg"
         
         isLoading = true
         defer { isLoading = false }
@@ -220,7 +220,7 @@ class ClienteViewModel {
             try await SupabaseManager.shared.client
                 .from("clientes")
                 .update(["documento_tipo": tipo, "documento_path": path])
-                .eq("id", value: clienteId.uuidString)
+                .eq("id", value: clienteId)
                 .execute()
             
             return path
@@ -229,4 +229,21 @@ class ClienteViewModel {
             return nil
         }
     }
+}
+
+extension Cliente {
+    static let mock = Cliente(
+        id: 1,
+        nombre: "Marco",
+        appaterno: "Ramírez",
+        apmaterno: "Galván",
+        telefono: "4611234567",
+        direccion: "Av. Tecnológico 123",
+        email: "marco@ejemplo.com"
+    )
+    
+    static let listaMock: [Cliente] = [
+        Cliente(id: 1, nombre: "Marco", appaterno: "Ramírez", apmaterno: "Galván", telefono: "4611234567", direccion: "Av. Tecnológico 123", email: "marco@ejemplo.com"),
+        Cliente(id: 2, nombre: "Ana", appaterno: "López", apmaterno: "Pérez", telefono: "4619876543", direccion: "Calle Juárez 45", email: "ana@ejemplo.com")
+    ]
 }

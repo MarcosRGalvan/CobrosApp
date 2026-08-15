@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Supabase
 
 @Observable
 @MainActor
@@ -15,6 +16,9 @@ class DetalleClienteViewModel {
     var score: Double = 0
     var isLoading = false
     var errorMessage: String?
+    
+    var documentoURL: URL?
+    var cargandoDocumento: Bool = false
     
     var scoreColor: String {
         switch score {
@@ -55,5 +59,26 @@ class DetalleClienteViewModel {
             errorMessage = "No se pudieron cargar las estadísticas: \(error.localizedDescription)"
         }
         isLoading = false
+    }
+    
+    func cargarDocumento(cliente: Cliente) async {
+        guard let path = cliente.documentoPath else { return }
+        
+        await MainActor.run { self.cargandoDocumento = true }
+        
+        do {
+            let url = try await SupabaseManager.shared.client.storage
+                .from("identificaciones")
+                .createSignedURL(path: path, expiresIn: 3600)
+            
+            await MainActor.run {
+                self.documentoURL = url
+                self.cargandoDocumento = false
+            }
+        } catch {
+            await MainActor.run {
+                self.cargandoDocumento = false
+            }
+        }
     }
 }
