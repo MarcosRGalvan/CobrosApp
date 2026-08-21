@@ -16,4 +16,5 @@ enum HomeDestination: Hashable {
     case usuarios
     case configuracion
     case rutas
+    case informe
 }

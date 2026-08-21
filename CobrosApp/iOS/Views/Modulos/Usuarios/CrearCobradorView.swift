@@ -87,6 +87,7 @@ struct CrearCobradorView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(Color("AppPrimary"))
                     .controlSize(.large)
                     .disabled(viewModel.isLoading)
                 }

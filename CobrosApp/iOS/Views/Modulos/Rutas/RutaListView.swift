@@ -12,35 +12,45 @@ struct RutaListView: View {
     @State private var viewModel = RutaViewModel()
     @State private var rutaSeleccionada: Ruta? = nil
     
+    private var degradado: LinearGradient {
+        LinearGradient(
+            colors: [Color("AppPrimary"), Color("AppPrimary").opacity(0.0)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+    
     var body: some View {
-        Group {
-            if viewModel.isLoading {
-                ProgressView("Cargando rutas...")
-            } else if viewModel.rutas.isEmpty {
-                ContentUnavailableView(
-                    "Sin rutas",
-                    systemImage: "road.lanes",
-                    description: Text("Aún no hay rutas registradas.")
-                )
-            } else {
-                List {
-                    if !viewModel.rutasActivas.isEmpty {
-                        Section(header: Text("Activas")) {
-                            ForEach(viewModel.rutasActivas) { ruta in
-                                rutaLink(ruta)
+        ZStack(alignment: .top) {
+            Group {
+                if viewModel.isLoading {
+                    ProgressView("Cargando rutas...")
+                } else if viewModel.rutas.isEmpty {
+                    ContentUnavailableView(
+                        "Sin rutas",
+                        systemImage: "road.lanes",
+                        description: Text("Aún no hay rutas registradas.")
+                    )
+                } else {
+                    List {
+                        if !viewModel.rutasActivas.isEmpty {
+                            Section(header: Text("Activas")) {
+                                ForEach(viewModel.rutasActivas) { ruta in
+                                    rutaLink(ruta)
+                                }
+                            }
+                        }
+                        
+                        if !viewModel.rutasInactivas.isEmpty {
+                            Section(header: Text("Inactivas")) {
+                                ForEach(viewModel.rutasInactivas) { ruta in
+                                    rutaLink(ruta)
+                                }
                             }
                         }
                     }
-                    
-                    if !viewModel.rutasInactivas.isEmpty {
-                        Section(header: Text("Inactivas")) {
-                            ForEach(viewModel.rutasInactivas) { ruta in
-                                rutaLink(ruta)
-                            }
-                        }
-                    }
+                    .refreshable { await viewModel.cargarRutas() }
                 }
-                .refreshable { await viewModel.cargarRutas() }
             }
         }
         .navigationTitle("Rutas")
@@ -52,6 +62,8 @@ struct RutaListView: View {
                     } label: {
                          Image(systemName: "plus")
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color("AppPrimary"))
                 }
             }
         }
@@ -106,10 +118,10 @@ struct RutaRow: View {
         HStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .fill(ruta.activo ? Color.blue.opacity(0.15) : Color.gray.opacity(0.15))
+                    .fill(ruta.activo ? Color("AppPrimary").opacity(0.15) : Color.gray.opacity(0.15))
                     .frame(width: 44, height: 44)
                 Image(systemName: "road.lanes.curved.right")
-                    .foregroundStyle(ruta.activo ? .blue : .gray)
+                    .foregroundStyle(ruta.activo ? Color("AppPrimary") : .gray)
                     .font(.title3)
             }
             

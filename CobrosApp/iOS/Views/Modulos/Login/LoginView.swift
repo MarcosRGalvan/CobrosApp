@@ -14,65 +14,75 @@ struct LoginView: View {
     @State private var clave = ""
     
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
+        ZStack(alignment: .top) {
+            LinearGradient(
+                gradient: Gradient(colors: [Color("AppPrimary"), Color.clear]),
+                startPoint: .top,
+                endPoint: .center
+            )
+            .ignoresSafeArea()
             
-            VStack(spacing: 8) {
-                Image("icon")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 110, height: 110)
-                Text("Cobros App")
-                    .font(.largeTitle)
-                    .bold()
-            }
-            
-            VStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Clave de organización")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    TextField("Ej: X7K9P2", text: $claveOrg)
-                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-                        .padding()
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+            VStack(spacing: 32) {
+                Spacer()
+                
+                VStack(spacing: 8) {
+                    Image("icon")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 110, height: 110)
+                    Text("Cobros App")
+                        .font(.largeTitle)
+                        .bold()
                 }
                 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Contraseña")
+                VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Clave de organización")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextField("Ej: X7K9P2", text: $claveOrg)
+                            .textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled()
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Contraseña")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        SecureField("Contraseña", text: $clave)
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+                .padding(.horizontal)
+                
+                if let error = auth.errorMessage {
+                    Text(error)
+                        .foregroundStyle(.red)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
-                    SecureField("Contraseña", text: $clave)
-                        .padding()
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
-            }
-            .padding(.horizontal)
-            
-            if let error = auth.errorMessage {
-                Text(error)
-                    .foregroundStyle(.red)
-                    .font(.caption)
-            }
-            
-            Button {
-                Task { await auth.login(claveOrg: claveOrg, clave: clave) }
-            } label: {
-                if auth.isLoading {
-                    ProgressView().frame(maxWidth: .infinity)
-                } else {
-                    Text("Iniciar Sesión").frame(maxWidth: .infinity)
+                
+                Button {
+                    Task { await auth.login(claveOrg: claveOrg, clave: clave) }
+                } label: {
+                    if auth.isLoading {
+                        ProgressView().frame(maxWidth: .infinity)
+                    } else {
+                        Text("Iniciar Sesión").frame(maxWidth: .infinity)
+                    }
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(Color("AppPrimary"))
+                .controlSize(.large)
+                .disabled(claveOrg.isEmpty || clave.isEmpty || auth.isLoading)
+                .padding(.horizontal)
+                
+                Spacer()
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .disabled(claveOrg.isEmpty || clave.isEmpty || auth.isLoading)
-            .padding(.horizontal)
-            
-            Spacer()
         }
     }
 }

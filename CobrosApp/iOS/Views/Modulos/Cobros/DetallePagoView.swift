@@ -46,12 +46,12 @@ struct DetallePagoView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            VStack(spacing: 0) {
+            /*VStack(spacing: 0) {
                 degradadoSuperior
                     .frame(height: UIScreen.main.bounds.height / 2)
                     .ignoresSafeArea(edges: .top)
                 Spacer()
-            }
+            }*/
             
             Form {
                 Section(header: Text("Datos del Cliente")) {
@@ -243,7 +243,7 @@ struct DetallePagoView: View {
                     }
                 }
             }
-            .scrollContentBackground(.hidden)
+            //.scrollContentBackground(.hidden)
         }
         .navigationTitle("Detalle del Pago")
         .sheet(isPresented: $mostrarHistorial) {
@@ -294,6 +294,22 @@ struct DetallePagoView: View {
             }
         } message: {
             Text("Este es el último pago del credito. ¿Deseas darlo por finalizado?")
+        }
+        .alert(
+            "Cierre con pagos pendientes",
+            isPresented: Binding(
+                get: { viewModel.mostrarAlertaCierreConPendientes },
+                set: { viewModel.mostrarAlertaCierreConPendientes = $0 }
+            )
+        ) {
+            Button("Sí, cerrar el crédito", role: .destructive) {
+                Task { await viewModel.confirmarFinalizarPrestamo() }
+            }
+            Button("No, dejarlo activo", role: .cancel) {
+                viewModel.continuarSinFinalizar()
+            }
+        } message: {
+            Text("Al crédito le \(viewModel.cuotasFaltantes == 1 ? "falta 1 pago)" : "faltan \(viewModel.cuotasFaltantes) pagos") por un saldo de \(viewModel.saldoRestante, format: .currency(code: "MXN")). ¿Deseas cerrarlo de todas formas?")
         }
         .alert(
             "Cliente no pagó",

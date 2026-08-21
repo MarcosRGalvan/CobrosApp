@@ -57,12 +57,12 @@ struct CrearClienteView: View {
     
     var body: some View {
         ZStack(alignment: .top) {
-            VStack(spacing: 0) {
+            /*VStack(spacing: 0) {
                 degradado
                     .frame(height: UIScreen.main.bounds.height / 2)
                     .ignoresSafeArea()
                 Spacer()
-            }
+            }*/
             
             Form {
                 Section(header: Text("Información Personal")) {
@@ -111,7 +111,7 @@ struct CrearClienteView: View {
                 }
             }
         }
-        .scrollContentBackground(.hidden)
+        //.scrollContentBackground(.hidden)
         .navigationTitle(esEdicion ? "Editar Cliente" : "Nuevo Cliente")
         .interactiveDismissDisabled(viewModel.isLoading)
         .toolbar {
@@ -186,7 +186,7 @@ struct CrearClienteView: View {
             resultado = await viewModel.crearCliente(clienteAGuardar)
         }
         
-        guard let resultado, let clienteId = resultado.id, let organizacionId = resultado.organizacionId else { return }
+        guard let resultado, let clienteId = resultado.id, let _ = resultado.organizacionId else { return }
         
         if let imagenDocumento {
             _ = await viewModel.subirDocumentoIdentificacion(

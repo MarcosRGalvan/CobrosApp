@@ -11,6 +11,14 @@ struct DetallePrestamoView: View {
     let prestamo: Prestamo
     @State private var mostrarHistorial = false
     
+    private var degradado: LinearGradient {
+        LinearGradient(
+            colors: [Color("AppPrimary"), Color("AppPrimary").opacity(0.0)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+    
     private var uiDateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd/MM/yyyy"
@@ -24,69 +32,73 @@ struct DetallePrestamoView: View {
     }
     
     var body: some View {
-        Form {
-            Section(header: Text("Cliente")) {
-                Label(prestamo.nombreCompletoCliente, systemImage: "person.crop.circle.fill")
+        ZStack(alignment: .top) {
+        
+            Form {
+                Section(header: Text("Cliente")) {
+                    Label(prestamo.nombreCompletoCliente, systemImage: "person.crop.circle.fill")
+                    
+                    if let direccion = prestamo.cliente?.direccion, !direccion.isEmpty {
+                        Label(direccion, systemImage: "mappin.and.ellipse")
+                    }
+                }
                 
-                if let direccion = prestamo.cliente?.direccion, !direccion.isEmpty {
-                    Label(direccion, systemImage: "mappin.and.ellipse")
-                }
-            }
-            
-            Section(header: Text("Datos del préstamo")) {
-                HStack {
-                    Text("Monto prestado")
-                    Spacer()
-                    Text(prestamo.montoPrestado, format: .currency(code: "MXN"))
-                        .bold()
-                }
-                HStack {
-                    Text("Interés")
-                    Spacer()
-                    Text("\(prestamo.interesPorciento, specifier: "%.1f")%")
-                }
-                HStack {
-                    Text("Número de cuotas")
-                    Spacer()
-                    Text("\(prestamo.cuotas)")
-                }
-                HStack {
-                    Text("Pago por cuota (aprox.)")
-                    Spacer()
-                    Text(montoPorCuota, format: .currency(code: "MXN"))
-                }
-                HStack {
-                    Text("Fecha de inicio")
-                    Spacer()
-                    Text(prestamo.fechaPrestamo, formatter: uiDateFormatter)
-                }
-                if let fechaTermino = prestamo.fechaTermino {
+                Section(header: Text("Datos del préstamo")) {
                     HStack {
-                        Text("Fecha de término")
+                        Text("Monto prestado")
                         Spacer()
-                        Text(fechaTermino, formatter: uiDateFormatter)
+                        Text(prestamo.montoPrestado, format: .currency(code: "MXN"))
+                            .bold()
+                    }
+                    HStack {
+                        Text("Interés")
+                        Spacer()
+                        Text("\(prestamo.interesPorciento, specifier: "%.1f")%")
+                    }
+                    HStack {
+                        Text("Número de cuotas")
+                        Spacer()
+                        Text("\(prestamo.cuotas)")
+                    }
+                    HStack {
+                        Text("Pago por cuota (aprox.)")
+                        Spacer()
+                        Text(montoPorCuota, format: .currency(code: "MXN"))
+                    }
+                    HStack {
+                        Text("Fecha de inicio")
+                        Spacer()
+                        Text(prestamo.fechaPrestamo, formatter: uiDateFormatter)
+                    }
+                    if let fechaTermino = prestamo.fechaTermino {
+                        HStack {
+                            Text("Fecha de término")
+                            Spacer()
+                            Text(fechaTermino, formatter: uiDateFormatter)
+                        }
+                    }
+                }
+                
+                Section(header: Text("Estado")) {
+                    Label {
+                        Text(prestamo.activo ? "Activo" : "Liquidado")
+                            .foregroundStyle(prestamo.activo ? .primary : .secondary)
+                    } icon: {
+                        Image(systemName: prestamo.activo ? "checkmark.circle.fill" : "archivebox.fill")
+                            .foregroundStyle(prestamo.activo ? .green : .gray)
+                    }
+                }
+                
+                Section {
+                    Button {
+                        mostrarHistorial = true
+                    } label: {
+                        Label("Ver historial de pago", systemImage: "clock.arrow.circlepath")
                     }
                 }
             }
-            
-            Section(header: Text("Estado")) {
-                Label {
-                    Text(prestamo.activo ? "Activo" : "Liquidado")
-                        .foregroundStyle(prestamo.activo ? .primary : .secondary)
-                } icon: {
-                    Image(systemName: prestamo.activo ? "checkmark.circle.fill" : "archivebox.fill")
-                        .foregroundStyle(prestamo.activo ? .green : .gray)
-                }
-            }
-            
-            Section {
-                Button {
-                    mostrarHistorial = true
-                } label: {
-                    Label("Ver historial de pago", systemImage: "clock.arrow.circlepath")
-                }
-            }
         }
+        //.scrollContentBackground(.hidden)
         .navigationTitle("Detalle del Préstamo")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $mostrarHistorial) {

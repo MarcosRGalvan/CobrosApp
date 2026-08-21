@@ -27,12 +27,12 @@ struct ClientesListView: View {
     
     var body: some View {
         ZStack(alignment: .top) {
-            VStack(spacing: 0) {
+            /*VStack(spacing: 0) {
                 degradado
                     .frame(height: UIScreen.main.bounds.height / 2)
                     .ignoresSafeArea(edges: .top)
                 Spacer()
-            }
+            }*/
             
             List {
                 if viewModel.clientesFiltrados.isEmpty && !viewModel.isLoading {
@@ -58,7 +58,7 @@ struct ClientesListView: View {
                     }
                 }
             }
-            .scrollContentBackground(.hidden)
+            //.scrollContentBackground(.hidden)
             .navigationTitle("Clientes")
             .searchable(text: $viewModel.textoBusqueda, prompt: "Buscar por nombre o teléfono")
             .overlay {
@@ -81,6 +81,8 @@ struct ClientesListView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color("AppPrimary"))
                 }
             }
             .navigationDestination(for: ClienteDestino.self) { destino in

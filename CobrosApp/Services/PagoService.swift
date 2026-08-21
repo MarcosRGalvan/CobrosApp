@@ -229,11 +229,23 @@ class PagoService {
 
     // Marca que el cobrador visitó al cliente pero no hubo pago
     func marcarSinPago(pagoId: Int) async throws {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(
+                domain: "PagoService",
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "No hay sesión activa"]
+            )
+        }
+        
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone.current
+        
         try await supabase
             .from("pagos")
             .update([
                 "estado": AnyJSON.string("sin_pagar"),
-                "fecha_visita_sin_pago": AnyJSON.null,
+                "fecha_visita_sin_pago": AnyJSON.string(formatter.string(from: Date())),
+                "cobrador_id": AnyJSON.string(userId.uuidString),
             ])
             .eq("id", value: pagoId)
             .execute()
@@ -277,6 +289,7 @@ class PagoService {
         let hoy = Calendar.current.startOfDay(for: Date())
         let manana = Calendar.current.date(byAdding: .day, value: 1, to: hoy)!
         let formatter = ISO8601DateFormatter()
+        let desde = formatter.string(from: hoy)
         let hasta = formatter.string(from: manana)
 
         struct PagoResumen: Decodable {
@@ -290,43 +303,56 @@ class PagoService {
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
+        let rutaService = RutaService()
 
-        let response =
-            try await supabase
-            .from("pagos")
-            .select("fecha_pago, monto_pagado")
-            .lt("fecha_vencimiento", value: hasta)
-            .execute()
+        let pagos: [PagoResumen]
 
-        let pagos = try decoder.decode([PagoResumen].self, from: response.data)
+        // Igual que en fetchCobrosDiarios: si tiene ruta asignada, filtra por ella
+        if let rutaId = try await rutaService.fetchRutaIdDelCobrador() {
+            struct PrestamoId: Decodable { let prestamo_id: Int }
+            let prestamos: [PrestamoId] =
+                try await supabase
+                .from("prestamos")
+                .select("prestamo_id, clientes!inner(ruta_id)")
+                .eq("clientes.ruta_id", value: rutaId.uuidString)
+                .execute()
+                .value
 
-        // Pagos cobrados hoy por este cobrador
-        let cobrados =
-            try await supabase
-            .from("pagos")
-            .select("monto_pagado", head: false, count: .exact)
-            .eq("cobrador_id", value: cobradorId.uuidString)
-            .gte("fecha_pago", value: formatter.string(from: hoy))
-            .lt("fecha_pago", value: hasta)
-            .execute()
-
-        struct MontoPago: Decodable {
-            let montoPagado: Double
-            enum CodingKeys: String, CodingKey {
-                case montoPagado = "monto_pagado"
+            let ids = prestamos.map { $0.prestamo_id }
+            guard !ids.isEmpty else {
+                return ResumenDia(cobrosRealizados: 0, cobrosPendientes: 0, totalRecaudado: 0, efectividad: 0)
             }
+
+            let response =
+                try await supabase
+                .from("pagos")
+                .select("fecha_pago, monto_pagado")
+                .gte("fecha_vencimiento", value: desde)   // ← NUEVO: acota a hoy
+                .lt("fecha_vencimiento", value: hasta)
+                .in("prestamo_id", values: ids)            // ← NUEVO: acota a su ruta
+                .execute()
+
+            pagos = try decoder.decode([PagoResumen].self, from: response.data)
+
+        } else {
+            // Admin ve el resumen de toda la organización
+            let response =
+                try await supabase
+                .from("pagos")
+                .select("fecha_pago, monto_pagado")
+                .gte("fecha_vencimiento", value: desde)   // ← NUEVO
+                .lt("fecha_vencimiento", value: hasta)
+                .execute()
+
+            pagos = try decoder.decode([PagoResumen].self, from: response.data)
         }
 
-        let cobradosDetalle = try decoder.decode(
-            [MontoPago].self,
-            from: cobrados.data
-        )
-        let totalRecaudado = cobradosDetalle.map { $0.montoPagado }.reduce(0, +)
-        let cobrosRealizados = cobrados.count ?? 0
+        let cobrados = pagos.filter { $0.fechaPago != nil }
+        let cobrosRealizados = cobrados.count
+        let totalRecaudado = cobrados.map { $0.montoPagado }.reduce(0, +)
         let totalAsignados = pagos.count
         let pendientes = totalAsignados - cobrosRealizados
-        let efectividad =
-            totalAsignados > 0
+        let efectividad = totalAsignados > 0
             ? (Double(cobrosRealizados) / Double(totalAsignados)) * 100
             : 0
 

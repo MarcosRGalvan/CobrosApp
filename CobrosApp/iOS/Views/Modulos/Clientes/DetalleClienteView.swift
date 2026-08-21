@@ -44,12 +44,12 @@ struct DetalleClienteView: View {
     
     var body: some View {
         ZStack(alignment: .top) {
-            VStack(spacing: 0) {
+            /*VStack(spacing: 0) {
                 degradado
                     .frame(height: UIScreen.main.bounds.height / 2)
                     .ignoresSafeArea()
                 Spacer()
-            }
+            }*/
             
             Form {
                 Section(header: Text("Datos del Cliente")) {
@@ -199,7 +199,7 @@ struct DetalleClienteView: View {
                 }
             }
         }
-        .scrollContentBackground(.hidden)
+        //.scrollContentBackground(.hidden)
         .navigationTitle("Detalle del Cliente")
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -214,6 +214,8 @@ struct DetalleClienteView: View {
                     } label: {
                         Image(systemName: "pencil")
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color("AppPrimary"))
                 }
             }
         }

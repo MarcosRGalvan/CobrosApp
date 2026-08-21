@@ -20,17 +20,22 @@ struct ContentView: View {
     @Environment(AuthViewModel.self) private var auth
     
     private var items: [HomeItem] {
-        var result = [
-            HomeItem(icon: "road.lanes.curved.right", title: "Ruta del Dia", destination: .rutaDelDia),
+        var result: [HomeItem] = []
+        
+        if !auth.esAdmin {
+            result.append(HomeItem(icon: "road.lanes.curved.right", title: "Ruta del Dia", destination: .rutaDelDia))
+            result.append(HomeItem(icon: "chart.bar.fill", title: "Mi Resumen", destination: .resumenDia))
+        }
+        
+        result.append(contentsOf: [
             HomeItem(icon: "person.fill", title: "Clientes", destination: .clientes),
             HomeItem(icon: "dollarsign", title: "Prestamos", destination: .prestamos),
-            HomeItem(icon: "chart.bar.fill", title: "Mi Resumen", destination: .resumenDia),
-        ]
+        ])
         
         if auth.esAdmin {
             result.append(HomeItem(icon: "person.badge.shield.checkmark.fill", title: "Cobradores", destination: .usuarios))
             result.append(HomeItem(icon: "road.lanes", title: "Rutas", destination: .rutas))
-            //result.append(HomeItem(icon: "gearshape.fill", title: "Configuración", destination: .configuracion))
+            result.append(HomeItem(icon: "chart.line.uptrend.xyaxis", title: "Informes", destination: .informe))
         }
         
         return result
@@ -101,6 +106,8 @@ struct ContentView: View {
                     )
                 case .resumenDia:
                     ResumenDiaView()
+                case .informe:
+                    EmptyView()
                 case .rutaDelDia:
                     CobrosDiariosView()
                 case .usuarios:

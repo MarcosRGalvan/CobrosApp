@@ -118,3 +118,8 @@ struct ResumenDiaView: View {
         }
     }
 }
+
+#Preview {
+    ResumenDiaView()
+        .environment(AuthViewModel())
+}

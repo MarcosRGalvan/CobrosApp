@@ -23,6 +23,8 @@ class DetallePagoViewModel {
     var errorMessage: String?
     var pagoRegistradoExitosamente = false
     var mostrarAlertaUltimoPago = false
+    var mostrarAlertaCierreConPendientes = false
+    var cuotasFaltantes: Int = 0
     var prestamoFinalizado = false
     var visitaSinPagoRegistrada: Bool
     var pagoActualizadoExitosamente = false
@@ -142,9 +144,21 @@ class DetallePagoViewModel {
     func registrarSinPago() async {
         guard let pagoId = pago.id else { return }
         isRegistrandoVisita = true
+        
         do {
             try await pagoService.marcarSinPago(pagoId: pagoId)
-            pagoRegistradoExitosamente = true  // cierra la vista y lo quita del listado
+            visitaSinPagoRegistrada = true
+            
+            if let totalCuotas = pago.prestamos?.cuotas {
+                let cuotasResueltas = try await pagoService.totalCuotasResuletas(prestamoId: pago.prestamoId)
+                if cuotasResueltas >= totalCuotas {
+                    cuotasFaltantes = totalCuotas - totalPagosRealizados
+                    mostrarAlertaCierreConPendientes = true
+                    isRegistrandoVisita = false
+                    return
+                }
+            }
+            pagoRegistradoExitosamente = true
         } catch {
             errorMessage = "No se pudo registrar: \(error.localizedDescription)"
         }

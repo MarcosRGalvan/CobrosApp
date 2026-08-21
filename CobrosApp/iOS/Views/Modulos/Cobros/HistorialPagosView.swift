@@ -224,6 +224,6 @@ struct HistorialPagosView: View {
 
 #Preview {
     NavigationStack {
-        HistorialPagosView(prestamoId: 36, nombreCliente: "Marco Ramirez")
+        HistorialPagosView(prestamoId: 38, nombreCliente: "Marco Ramirez")
     }
 }

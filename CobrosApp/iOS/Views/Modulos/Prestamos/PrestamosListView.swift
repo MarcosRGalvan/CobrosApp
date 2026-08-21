@@ -15,44 +15,62 @@ struct PrestamosListView: View {
     @Binding var path: NavigationPath
     @State private var viewModel = PrestamoViewModel()
     @State private var textoBusqueda = ""
+    
+    private var degradado: LinearGradient {
+        LinearGradient(
+            colors: [Color("AppPrimary"), Color("AppPrimary").opacity(0.0)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
 
     var body: some View {
-        Group {
-            if let error = viewModel.errorMessage {
-                ContentUnavailableView {
-                    Label(
-                        "Error de conexion",
-                        systemImage: "exclamationmark.triangle"
-                    )
-                } description: {
-                    Text(error)
-                } actions: {
-                    Button("Reintentar") {
-                        Task { await viewModel.fetchPrestamos() }
+        ZStack(alignment: .top) {
+            /*VStack(spacing: 0) {
+                degradado
+                    .frame(height: UIScreen.main.bounds.height / 2)
+                    .ignoresSafeArea(edges: .top)
+                Spacer()
+            }*/
+            
+            Group {
+                if let error = viewModel.errorMessage {
+                    ContentUnavailableView {
+                        Label(
+                            "Error de conexion",
+                            systemImage: "exclamationmark.triangle"
+                        )
+                    } description: {
+                        Text(error)
+                    } actions: {
+                        Button("Reintentar") {
+                            Task { await viewModel.fetchPrestamos() }
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
-                    .buttonStyle(.borderedProminent)
-                }
-            } else if viewModel.isLoading && viewModel.prestamos.isEmpty {
-                ProgressView("Cargando historial de prestamos...")
-            } else if viewModel.prestamos.isEmpty {
-                ContentUnavailableView(
-                    "No hay préstamos",
-                    systemImage: "doc.plaintext",
-                    description: Text(
-                        "Los préstamos que registres aparecerán en está lista."
+                } else if viewModel.isLoading && viewModel.prestamos.isEmpty {
+                    ProgressView("Cargando historial de prestamos...")
+                } else if viewModel.prestamos.isEmpty {
+                    ContentUnavailableView(
+                        "No hay préstamos",
+                        systemImage: "doc.plaintext",
+                        description: Text(
+                            "Los préstamos que registres aparecerán en está lista."
+                        )
                     )
-                )
-            } else {
-                List(viewModel.prestamosFiltrados) { prestamo in
-                    NavigationLink(value: PrestamoDestino.detallePrestamo(prestamo)) {
-                        PrestamoRowView(prestamo: prestamo)
+                } else {
+                    List(viewModel.prestamosFiltrados) { prestamo in
+                        NavigationLink(value: PrestamoDestino.detallePrestamo(prestamo)) {
+                            PrestamoRowView(prestamo: prestamo)
+                        }
                     }
-                }
-                .refreshable {
-                    await viewModel.fetchPrestamos()
+                    .refreshable {
+                        await viewModel.fetchPrestamos()
+                    }
                 }
             }
         }
+        //.scrollContentBackground(.hidden)
         .navigationTitle("Prestamos")
         .searchable(text: $viewModel.textoBusqueda, prompt: "Buscar cliente...")
         .toolbar {
@@ -62,6 +80,8 @@ struct PrestamosListView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(Color("AppPrimary"))
             }
         }
         .navigationDestination(for: PrestamoDestino.self) { destino in
