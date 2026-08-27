@@ -226,6 +226,25 @@ class PagoService {
             .eq("id", value: pagoId)
             .execute()
     }
+    
+    func saldoRestanteTotal(prestamoId: Int) async throws -> Double {
+        struct MontoPago: Decodable {
+            let montoPagado: Double
+            enum CodingKeys: String, CodingKey {
+                case montoPagado = "monto_pagado"
+            }
+        }
+        
+        let response: [MontoPago] = try await supabase
+            .from("pagos")
+            .select("monto_pagado")
+            .eq("prestamo_id", value: prestamoId)
+            .neq("estado", value: "pagado")
+            .execute()
+            .value
+        
+        return response.map { $0.montoPagado }.reduce(0, +).rounded(toPlaces: 2)
+    }
 
     // Marca que el cobrador visitó al cliente pero no hubo pago
     func marcarSinPago(pagoId: Int) async throws {
@@ -295,9 +314,11 @@ class PagoService {
         struct PagoResumen: Decodable {
             let fechaPago: Date?
             let montoPagado: Double
+            let estado: String
             enum CodingKeys: String, CodingKey {
                 case fechaPago = "fecha_pago"
                 case montoPagado = "monto_pagado"
+                case estado
             }
         }
 
@@ -320,13 +341,13 @@ class PagoService {
 
             let ids = prestamos.map { $0.prestamo_id }
             guard !ids.isEmpty else {
-                return ResumenDia(cobrosRealizados: 0, cobrosPendientes: 0, totalRecaudado: 0, efectividad: 0)
+                return ResumenDia(cobrosRealizados: 0, cobrosPendientes: 0, cobrosSinPagar: 0, totalRecaudado: 0, efectividad: 0)
             }
 
             let response =
                 try await supabase
                 .from("pagos")
-                .select("fecha_pago, monto_pagado")
+                .select("fecha_pago, monto_pagado, estado")
                 .gte("fecha_vencimiento", value: desde)   // ← NUEVO: acota a hoy
                 .lt("fecha_vencimiento", value: hasta)
                 .in("prestamo_id", values: ids)            // ← NUEVO: acota a su ruta
@@ -339,7 +360,7 @@ class PagoService {
             let response =
                 try await supabase
                 .from("pagos")
-                .select("fecha_pago, monto_pagado")
+                .select("fecha_pago, monto_pagado, estado")
                 .gte("fecha_vencimiento", value: desde)   // ← NUEVO
                 .lt("fecha_vencimiento", value: hasta)
                 .execute()
@@ -347,18 +368,20 @@ class PagoService {
             pagos = try decoder.decode([PagoResumen].self, from: response.data)
         }
 
-        let cobrados = pagos.filter { $0.fechaPago != nil }
-        let cobrosRealizados = cobrados.count
+        let cobrados = pagos.filter { $0.estado == "pagado" }
+        let sinPagar = pagos.filter { $0.estado == "sin_pagar" }
+        let pendientes = pagos.filter { $0.estado == "pendiente" }
+        
         let totalRecaudado = cobrados.map { $0.montoPagado }.reduce(0, +)
         let totalAsignados = pagos.count
-        let pendientes = totalAsignados - cobrosRealizados
         let efectividad = totalAsignados > 0
-            ? (Double(cobrosRealizados) / Double(totalAsignados)) * 100
+            ? (Double(cobrados.count) / Double(totalAsignados)) * 100
             : 0
 
         return ResumenDia(
-            cobrosRealizados: cobrosRealizados,
-            cobrosPendientes: pendientes,
+            cobrosRealizados: cobrados.count,
+            cobrosPendientes: pendientes.count,
+            cobrosSinPagar: sinPagar.count,
             totalRecaudado: totalRecaudado,
             efectividad: efectividad
         )
@@ -378,13 +401,15 @@ class PagoService {
         guard !prestamoCliente.isEmpty else { return 0 }
         let ids = prestamoCliente.map { $0.prestamo_id }
 
-        let hoy = ISO8601DateFormatter().string(from: Date())
+        let hoy = Calendar.current.startOfDay(for: Date())
+        let hoyStr = ISO8601DateFormatter().string(from: hoy)
+        
         let sinPagar =
             try await supabase
             .from("pagos")
             .select("id", head: false, count: .exact)
             .in("prestamo_id", values: ids)
-            .lt("fecha_vencimiento", value: hoy)
+            .lt("fecha_vencimiento", value: hoyStr)
             .is("fecha_pago", value: nil)
             .execute()
 
@@ -421,65 +446,61 @@ class PagoService {
 
         return (sinPagar.count ?? 0) + tardios
     }
+    
+    struct PagoConCliente: Decodable {
+        let fechaPago: Date?
+        let fechaVencimiento: Date?
+        let prestamos: PrestamoClienteId?
 
-    func fetchScoreCliente(clienteId: Int) async throws -> Double {
-        // 1. Obtener IDs de préstamos del cliente
-        struct PrestamoId: Decodable { let prestamo_id: Int }
-        let prestamosCliente: [PrestamoId] =
-            try await supabase
-            .from("prestamos")
-            .select("prestamo_id")
-            .eq("cliente_id", value: clienteId)
-            .execute()
-            .value
-
-        guard !prestamosCliente.isEmpty else { return 0 }
-        let ids = prestamosCliente.map { $0.prestamo_id }
-
-        // 2. Total de pagos
-        let total =
-            try await supabase
-            .from("pagos")
-            .select("id", head: false, count: .exact)
-            .in("prestamo_id", values: ids)
-            .execute()
-
-        // 3. Pagos realizados a tiempo
-        struct PagoFechas: Decodable {
-            let fechaPago: Date?
-            let fechaVencimiento: Date?
+        struct PrestamoClienteId: Decodable {
+            let clienteId: Int
             enum CodingKeys: String, CodingKey {
-                case fechaPago = "fecha_pago"
-                case fechaVencimiento = "fecha_vencimiento"
+                case clienteId = "cliente_id"
             }
         }
+
+        enum CodingKeys: String, CodingKey {
+            case fechaPago = "fecha_pago"
+            case fechaVencimiento = "fecha_vencimiento"
+            case prestamos
+        }
+    }
+
+    func fetchScoresClientes(clienteIds: [Int]) async throws -> [Int: Double] {
+        guard !clienteIds.isEmpty else { return [:] }
+
+        let hoy = Calendar.current.startOfDay(for: Date())
+        let formatter = ISO8601DateFormatter()
+        let hastaHoy = formatter.string(from: hoy)
 
         let response =
             try await supabase
             .from("pagos")
-            .select("fecha_pago, fecha_vencimiento")
-            .in("prestamo_id", values: ids)
-            .not("fecha_pago", operator: .is, value: "null")
+            .select("fecha_pago, fecha_vencimiento, prestamos!inner(cliente_id)")
+            .in("prestamos.cliente_id", values: clienteIds)
+            .lt("fecha_vencimiento", value: hastaHoy)
             .execute()
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        let pagos = try decoder.decode([PagoFechas].self, from: response.data)
+        let pagos = try decoder.decode([PagoConCliente].self, from: response.data)
 
-        let aTiempo = pagos.filter { pago in
-            guard let fechaPago = pago.fechaPago,
-                let fechaVence = pago.fechaVencimiento
-            else { return false }
-            let calendar = Calendar.current
-            return calendar.startOfDay(for: fechaPago)
-                <= calendar.startOfDay(for: fechaVence)
-        }.count
+        let agrupados = Dictionary(grouping: pagos) { $0.prestamos?.clienteId ?? -1 }
 
-        let totalCount = total.count ?? 0
-        guard totalCount > 0 else { return 0 }
-        return (Double(aTiempo) / Double(totalCount)) * 100
+        var scores: [Int: Double] = [:]
+        for (clienteId, pagosCliente) in agrupados where clienteId != -1 {
+            let total = pagosCliente.count
+            guard total > 0 else { continue }
+            let aTiempo = pagosCliente.filter { pago in
+                guard let fechaPago = pago.fechaPago, let fechaVence = pago.fechaVencimiento else { return false }
+                let calendar = Calendar.current
+                return calendar.startOfDay(for: fechaPago) <= calendar.startOfDay(for: fechaVence)
+            }.count
+            scores[clienteId] = (Double(aTiempo) / Double(total)) * 100
+        }
+
+        return scores
     }
-
     func fetchCobrosDelDiaPorEstado(estado: String) async throws -> [Pago] {
         let hoy = Calendar.current.startOfDay(for: Date())
         let manana = Calendar.current.date(byAdding: .day, value: 1, to: hoy)!

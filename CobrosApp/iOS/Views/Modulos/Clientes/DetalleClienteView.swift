@@ -75,11 +75,8 @@ struct DetalleClienteView: View {
                                 Text("\(Int(viewModel.score))%")
                                     .font(.title2)
                                     .bold()
-                                    .foregroundStyle(
-                                        viewModel.score >= 80 ? .green :
-                                            viewModel.score >= 50 ? .orange : .red
-                                    )
-                                Text(viewModel.scoreDescription)
+                                    .foregroundStyle(viewModel.riesgo.color)
+                                Text(viewModel.riesgo.descripcion)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -109,7 +106,7 @@ struct DetalleClienteView: View {
                                     .frame(height: 10)
                                 RoundedRectangle(cornerRadius: 6)
                                     .fill(
-                                        viewModel.score >= 80 ? Color.green :
+                                        viewModel.score >= 75 ? Color.green :
                                             viewModel.score >= 50 ? Color.orange : Color.red
                                     )
                                     .frame(width: geo.size.width * (viewModel.score / 100), height: 10)

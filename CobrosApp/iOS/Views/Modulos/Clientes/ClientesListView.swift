@@ -44,14 +44,21 @@ struct ClientesListView: View {
                 } else {
                     ForEach(viewModel.clientesFiltrados) { cliente in
                         NavigationLink(value: ClienteDestino.detalleCliente(cliente)) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(nombreCompleto(cliente))
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
+                            HStack(alignment: .top, spacing: 10) {
+                                Circle()
+                                    .fill(RiesgoCrediticio(score: cliente.id.flatMap { viewModel.scores[$0] }).color)
+                                    .frame(width: 10, height: 10)
+                                    .padding(.top, 6)
                                 
-                                HCenterRow(icon: "phone.fill", text: cliente.telefono)
-                                HCenterRow(icon: "mappin.and.ellipse", text: cliente.direccion ?? "")
-                                HCenterRow(icon: "envelope", text: cliente.email ?? "")
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(nombreCompleto(cliente))
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                    
+                                    HCenterRow(icon: "phone.fill", text: cliente.telefono)
+                                    HCenterRow(icon: "mappin.and.ellipse", text: cliente.direccion ?? "")
+                                    HCenterRow(icon: "envelope", text: cliente.email ?? "")
+                                }
                             }
                             .padding(.vertical, 4)
                         }

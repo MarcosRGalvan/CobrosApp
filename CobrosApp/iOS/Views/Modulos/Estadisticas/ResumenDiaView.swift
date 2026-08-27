@@ -58,8 +58,9 @@ struct ResumenDiaView: View {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                             MetricasCard(titulo: "Cobros Realizados", valor: "\(resumen.cobrosRealizados)", icono: "checkmark.circle.fill", color: .green)
                             MetricasCard(titulo: "Cobros Pendientes", valor: "\(resumen.cobrosPendientes)", icono: "clock.fill", color: .orange)
+                            MetricasCard(titulo: "Sin pagar", valor: "\(resumen.cobrosSinPagar)", icono: "xmark.circle.fill", color: .red)
                             MetricasCard(titulo: "Total Recaudado", valor: "\(resumen.totalRecaudado)", icono: "dollarsign.circle.fill", color: .blue)
-                            MetricasCard(titulo: "Total Asignados", valor: "\(resumen.cobrosRealizados + resumen.cobrosPendientes)", icono: "list.bullet.clipboard.fill", color: .purple)
+                            MetricasCard(titulo: "Total Asignados", valor: "\(resumen.cobrosRealizados + resumen.cobrosSinPagar)", icono: "list.bullet.clipboard.fill", color: .purple)
                         }
                         .padding(.horizontal)
                     }

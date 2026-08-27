@@ -20,20 +20,8 @@ class DetalleClienteViewModel {
     var documentoURL: URL?
     var cargandoDocumento: Bool = false
     
-    var scoreColor: String {
-        switch score {
-        case 80...100: return "green"
-        case 50..<80: return "orange"
-        default: return "red"
-        }
-    }
-    
-    var scoreDescription: String {
-        switch score {
-        case 80...100: return "Buen pagador"
-        case 50..<80: return "Pago regular"
-        default: return "Alto riesgo"
-        }
+    var riesgo: RiesgoCrediticio {
+        RiesgoCrediticio(score: score)
     }
     
     private let pagoService = PagoService()
@@ -43,19 +31,16 @@ class DetalleClienteViewModel {
     }
     
     func cargarEstadisticas() async {
-        guard let clienteId = cliente.id else {
-            // print("❌ No hay clienteId")
-            return
-        }
-        // print("🔍 Cargando estadísticas para clienteId: \(clienteId)")
+        guard let clienteId = cliente.id else { return }
         isLoading = true
         do {
             async let incumplimientosTask = pagoService.fetchIncumplimientos(clienteId: clienteId)
-            async let scoreTask = pagoService.fetchScoreCliente(clienteId: clienteId)
-            (incumplimientos, score) = try await (incumplimientosTask, scoreTask)
-            // print("✅ Score: \(score), Incumplimientos: \(incumplimientos)")
+            async let scoresTask = pagoService.fetchScoresClientes(clienteIds: [clienteId])
+            let (incumplimientosResult, scoresResult) = try await (incumplimientosTask, scoresTask)
+            
+            incumplimientos = incumplimientosResult
+            score = scoresResult[clienteId] ?? 0
         } catch {
-            // print("❌ Error: \(error)")
             errorMessage = "No se pudieron cargar las estadísticas: \(error.localizedDescription)"
         }
         isLoading = false

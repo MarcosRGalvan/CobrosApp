@@ -7,13 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5D4CB9CC30393B6E00963031 /* CobrosAppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5D4CB9CB30393B6E00963031 /* CobrosAppIcon.icon */; };
+		5D4CB9CD30393B6E00963031 /* CobrosAppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5D4CB9CB30393B6E00963031 /* CobrosAppIcon.icon */; };
 		5DBF2B0D2FBD74FD00294A55 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 5DBF2B0C2FBD74FD00294A55 /* Supabase */; };
-		5DEC272A2FF5B268003B2734 /* CobrosAppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5DEC27292FF5B268003B2734 /* CobrosAppIcon.icon */; };
 		5DED7D9A300169A500047B1B /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 5DED7D99300169A500047B1B /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		5DEC27292FF5B268003B2734 /* CobrosAppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = CobrosAppIcon.icon; sourceTree = "<group>"; };
+		5D4CB9CB30393B6E00963031 /* CobrosAppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = CobrosAppIcon.icon; sourceTree = "<group>"; };
 		5DED7D1E300167C400047B1B /* CobrosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CobrosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DED7D8D300168D800047B1B /* CobrosAdmin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CobrosAdmin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -30,6 +31,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Enums/HomeDestination.swift,
+				Enums/RiesgoCrediticio.swift,
 				iOS/ViewModels/Usuarios/AuthViewModel.swift,
 				Models/Cliente.swift,
 				Models/FormaPago.swift,
@@ -93,8 +95,8 @@
 			isa = PBXGroup;
 			children = (
 				5DBF2A622FBD3BDA00294A55 /* CobrosApp */,
-				5DEC27292FF5B268003B2734 /* CobrosAppIcon.icon */,
 				5DED7D1E300167C400047B1B /* CobrosApp.app */,
+				5D4CB9CB30393B6E00963031 /* CobrosAppIcon.icon */,
 				5DED7D8D300168D800047B1B /* CobrosAdmin.app */,
 				5DED7D8E300168D800047B1B /* CobrosAdmin */,
 				5DED7D98300169A500047B1B /* Frameworks */,
@@ -203,7 +205,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5DEC272A2FF5B268003B2734 /* CobrosAppIcon.icon in Resources */,
+				5D4CB9CC30393B6E00963031 /* CobrosAppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -211,6 +213,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5D4CB9CD30393B6E00963031 /* CobrosAppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -442,8 +445,9 @@
 		5DED7D95300168D900047B1B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = CobrosAppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -485,8 +489,9 @@
 		5DED7D96300168D900047B1B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = CobrosAppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;

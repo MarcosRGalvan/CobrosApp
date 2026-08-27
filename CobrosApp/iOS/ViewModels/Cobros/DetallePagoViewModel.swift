@@ -87,10 +87,8 @@ class DetallePagoViewModel {
         do {
             totalPagosRealizados = try await pagoService.totalPagosRealizados(prestamoId: pago.prestamoId)
             
-            if let montoPrestado = pago.prestamos?.montoPrestado {
-                let capitalPagado = try await pagoService.saldoPendiente(prestamoId: pago.prestamoId)
-                saldoRestante = (montoPrestado - capitalPagado).rounded(toPlaces: 2)
-            }
+            saldoRestante = try await pagoService.saldoRestanteTotal(prestamoId: pago.prestamoId)
+    
         } catch {
             // print("Error cargando datos: \(error.localizedDescription)")
         }

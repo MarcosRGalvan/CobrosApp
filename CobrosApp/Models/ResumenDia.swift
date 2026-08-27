@@ -11,6 +11,7 @@ import Foundation
 struct ResumenDia {
     let cobrosRealizados: Int
     let cobrosPendientes: Int
+    let cobrosSinPagar: Int
     let totalRecaudado: Double
     let efectividad: Double
 }

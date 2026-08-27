@@ -13,9 +13,12 @@ import UIKit
 class ClienteViewModel {
     var clientes: [Cliente] = []
     var textoBusqueda: String = ""
+    var scores: [Int: Double] = [:]
     
     var isLoading: Bool = false
     var errorMessage: String? = nil
+    
+    private let pagoService = PagoService()
     
     // Filtrar clientes
     var clientesFiltrados: [Cliente] {
@@ -59,6 +62,8 @@ class ClienteViewModel {
                 self.clientes = fetchClientes
                 self.isLoading = false
             }
+            
+            await cargarScores()
         } catch {
             //print("❌ Error detallado de Supabase: \(error)")
             //print(String(describing: error))
@@ -67,6 +72,18 @@ class ClienteViewModel {
                 self.errorMessage = "No se pudieron cargar los clientes: \(error.localizedDescription)"
                 self.isLoading = false
             }
+        }
+    }
+    
+    func cargarScores() async {
+        let ids = clientes.compactMap { $0.id }
+        do {
+            let resultado = try await pagoService.fetchScoresClientes(clienteIds: ids)
+            await MainActor.run {
+                self.scores = resultado
+            }
+        } catch {
+            
         }
     }
     
