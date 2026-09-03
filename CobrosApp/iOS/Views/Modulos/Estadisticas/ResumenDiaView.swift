@@ -9,8 +9,17 @@ import SwiftUI
 
 struct ResumenDiaView: View {
     @Environment(AuthViewModel.self) private var auth
-    @State private var viewModel = ResumenDiaViewModel()
-    
+    @State private var viewModel: ResumenDiaViewModel
+
+    @MainActor
+    init() {
+        _viewModel = State(initialValue: ResumenDiaViewModel())
+    }
+
+    init(viewModel: ResumenDiaViewModel) {
+        _viewModel = State(initialValue: viewModel)
+    }
+
     private var formatedDate: String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "es_MX")
@@ -55,12 +64,12 @@ struct ResumenDiaView: View {
                         .padding()
                         
                         // Tarjetas de métricas
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                            MetricasCard(titulo: "Cobros Realizados", valor: "\(resumen.cobrosRealizados)", icono: "checkmark.circle.fill", color: .green)
-                            MetricasCard(titulo: "Cobros Pendientes", valor: "\(resumen.cobrosPendientes)", icono: "clock.fill", color: .orange)
-                            MetricasCard(titulo: "Sin pagar", valor: "\(resumen.cobrosSinPagar)", icono: "xmark.circle.fill", color: .red)
-                            MetricasCard(titulo: "Total Recaudado", valor: "\(resumen.totalRecaudado)", icono: "dollarsign.circle.fill", color: .blue)
-                            MetricasCard(titulo: "Total Asignados", valor: "\(resumen.cobrosRealizados + resumen.cobrosSinPagar)", icono: "list.bullet.clipboard.fill", color: .purple)
+                        VStack(spacing: 16) {
+                            MetricasRow(titulo: "Cobros Realizados", valor: "\(resumen.cobrosRealizados)", icono: "checkmark.circle.fill", color: .green)
+                            MetricasRow(titulo: "Cobros Pendientes", valor: "\(resumen.cobrosPendientes)", icono: "clock.fill", color: .orange)
+                            MetricasRow(titulo: "Sin pagar", valor: "\(resumen.cobrosSinPagar)", icono: "xmark.circle.fill", color: .red)
+                            MetricasRow(titulo: "Total Recaudado", valor: resumen.totalRecaudado.formatted(.currency(code: "MXN")), icono: "dollarsign.circle.fill", color: .blue)
+                            MetricasRow(titulo: "Total Asignados", valor: "\(resumen.cobrosRealizados + resumen.cobrosSinPagar)", icono: "list.bullet.clipboard.fill", color: .purple)
                         }
                         .padding(.horizontal)
                     }
@@ -88,39 +97,72 @@ struct ResumenDiaView: View {
         }
     }
     
-    struct MetricasCard: View {
+    struct MetricasRow: View {
         let titulo: String
         let valor: String
         let icono: String
         let color: Color
         
         var body: some View {
-            VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 16) {
                 Image(systemName: icono)
                     .font(.title2)
                     .foregroundStyle(color)
+                    .frame(width: 36)
+                
+                Text(titulo)
+                    .font(.subheadline)
+                    .foregroundStyle(.primary)
                 
                 Spacer()
                 
                 Text(valor)
-                    .font(.title2)
+                    .font(.title3)
                     .bold()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                
-                Text(titulo)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
             .padding()
-            .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: 64)
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
 }
 
-#Preview {
-    ResumenDiaView()
-        .environment(AuthViewModel())
+// MARK: - Mockups para visualizar el diseño
+
+#Preview("Alta efectividad") {
+    let vm = ResumenDiaViewModel()
+    vm.resumen = ResumenDia(
+        cobrosRealizados: 18,
+        cobrosPendientes: 4,
+        cobrosSinPagar: 3,
+        totalRecaudado: 12_500,
+        efectividad: 78
+    )
+    return NavigationStack {
+        ResumenDiaView(viewModel: vm)
+    }
+    .environment(AuthViewModel())
+}
+
+#Preview("Baja efectividad") {
+    let vm = ResumenDiaViewModel()
+    vm.resumen = ResumenDia(
+        cobrosRealizados: 6,
+        cobrosPendientes: 9,
+        cobrosSinPagar: 11,
+        totalRecaudado: 3_200,
+        efectividad: 35
+    )
+    return NavigationStack {
+        ResumenDiaView(viewModel: vm)
+    }
+    .environment(AuthViewModel())
+}
+
+#Preview("Sin datos") {
+    NavigationStack {
+        ResumenDiaView()
+    }
+    .environment(AuthViewModel())
 }
