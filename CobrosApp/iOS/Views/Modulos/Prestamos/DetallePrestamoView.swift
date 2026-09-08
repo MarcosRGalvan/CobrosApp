@@ -27,8 +27,11 @@ struct DetallePrestamoView: View {
     
     private var montoPorCuota: Double {
         guard prestamo.cuotas > 0 else { return 0 }
-        let totalConInteres = prestamo.montoPrestado * (1 + prestamo.interesPorciento / 300)
-        return totalConInteres / Double(prestamo.cuotas)
+        return totalAPagar / Double(prestamo.cuotas)
+    }
+    
+    private var totalAPagar: Double {
+        prestamo.montoPrestado * (1 + prestamo.interesPorciento / 100)
     }
     
     var body: some View {
@@ -54,6 +57,13 @@ struct DetallePrestamoView: View {
                         Text("Interés")
                         Spacer()
                         Text("\(prestamo.interesPorciento, specifier: "%.1f")%")
+                    }
+                    HStack {
+                        Text("Total a pagar")
+                        Spacer()
+                        Text("\(totalAPagar, format: .currency(code: "MXN"))")
+                            .bold()
+                            .foregroundStyle(.red)
                     }
                     HStack {
                         Text("Número de cuotas")

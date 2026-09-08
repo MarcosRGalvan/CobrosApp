@@ -62,9 +62,7 @@ class PagoService {
 
         let calendar = Calendar.current
         let fechaBase = calendar.startOfDay(for: prestamo.fechaPrestamo)
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone.current
+        let isoFormatter = ISO8601DateFormatter()
 
         let montoPorCuota =
             ((prestamo.montoPrestado * (1 + prestamo.interesPorciento / 100))
@@ -87,7 +85,7 @@ class PagoService {
                     prestamo_id: prestamoId,
                     monto_pagado: montoPorCuota,
                     numero_cuota: i,
-                    fecha_vencimiento: formatter.string(from: fechaVence),
+                    fecha_vencimiento: isoFormatter.string(from: fechaVence),
                     organizacion_id: orgId
                 )
             )
@@ -480,6 +478,8 @@ class PagoService {
             .in("prestamos.cliente_id", values: clienteIds)
             .lt("fecha_vencimiento", value: hastaHoy)
             .execute()
+        
+        print("📦 Raw response scores: \(String(data: response.data, encoding: .utf8) ?? "nil")")
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -498,9 +498,10 @@ class PagoService {
             }.count
             scores[clienteId] = (Double(aTiempo) / Double(total)) * 100
         }
-
+        
         return scores
     }
+    
     func fetchCobrosDelDiaPorEstado(estado: String) async throws -> [Pago] {
         let hoy = Calendar.current.startOfDay(for: Date())
         let manana = Calendar.current.date(byAdding: .day, value: 1, to: hoy)!
