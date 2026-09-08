@@ -176,6 +176,12 @@ struct DetallePagoView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         
+                        Toggle(isOn: $viewModel.enviarComprobante) {
+                            Label("Enviar comprobante", systemImage: "square.and.arrow.up")
+                        }
+                        .tint(Color("AppPrimary"))
+                        .disabled(camposDeshabilitados)
+                        
                         Button {
                             Task {
                                 if viewModel.isGuardando {
@@ -261,6 +267,19 @@ struct DetallePagoView: View {
                 }
             }
         }
+        .sheet(
+            isPresented: Binding(
+                get: { viewModel.mostrarComprobante },
+                set: { viewModel.mostrarComprobante = $0 }
+            ),
+            onDismiss: {
+                viewModel.pagoRegistradoExitosamente = true
+            }
+        ) {
+            if let url = viewModel.comprobanteURL {
+                ActivityView(activityItems: [url])
+            }
+        }
         .task { await viewModel.cargarDatosIniciales() }
         .onChange(of: viewModel.pagoRegistradoExitosamente) { _, exitoso in
             if exitoso { dismiss() }
@@ -309,7 +328,7 @@ struct DetallePagoView: View {
                 viewModel.continuarSinFinalizar()
             }
         } message: {
-            Text("Al crédito le \(viewModel.cuotasFaltantes == 1 ? "falta 1 pago)" : "faltan \(viewModel.cuotasFaltantes) pagos") por un saldo de \(viewModel.saldoRestante, format: .currency(code: "MXN")). ¿Deseas cerrarlo de todas formas?")
+            Text("Al crédito le \(viewModel.cuotasFaltantes == 1 ? "falta 1 pago" : "faltan \(viewModel.cuotasFaltantes) pagos") por un saldo de \(viewModel.saldoRestante, format: .currency(code: "MXN")). ¿Deseas cerrarlo de todas formas?")
         }
         .alert(
             "Cliente no pagó",

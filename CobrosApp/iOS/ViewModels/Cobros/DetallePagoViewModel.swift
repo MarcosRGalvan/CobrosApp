@@ -35,6 +35,10 @@ class DetallePagoViewModel {
     var mostrarConfirmacionRevertir = false
     var pagoRevertido = false
     
+    var enviarComprobante = false
+    var comprobanteURL: URL?
+    var mostrarComprobante = false
+    
     var estaVencido: Bool {
         guard let fechaVencimiento = pago.fechaVencimiento else { return false }
         return fechaVencimiento < Calendar.current.startOfDay(for: Date())
@@ -125,14 +129,21 @@ class DetallePagoViewModel {
             )
             isGuardando = false
             
-            if let totalCuotas = pago.prestamos?.cuotas {
-                let pagosActualizados = totalPagosRealizados + 1
-                if pagosActualizados >= totalCuotas {
-                    mostrarAlertaUltimoPago = true
-                    return // No marca pagoRegistradoExitosamente todavia, espera confirmación
-                }
+            totalPagosRealizados = try await pagoService.totalPagosRealizados(prestamoId: pago.prestamoId)
+            saldoRestante = try await pagoService.saldoRestanteTotal(prestamoId: pago.prestamoId)
+            
+            if let totalCuotas = pago.prestamos?.cuotas, totalPagosRealizados >= totalCuotas {
+                mostrarAlertaUltimoPago = true
+                return
             }
-            pagoRegistradoExitosamente = true
+            
+            if enviarComprobante {
+                generarComprobante()
+                mostrarComprobante = true
+            } else {
+                pagoRegistradoExitosamente = true
+            }
+        
         } catch {
             errorMessage = "No se pudo registrar el pago: \(error.localizedDescription)"
             isGuardando = false
@@ -237,5 +248,27 @@ class DetallePagoViewModel {
             errorMessage = "No se pudo revertir el pago: \(error.localizedDescription)"
             isGuardando = false
         }
+    }
+    
+    private func generarComprobante() {
+        let folio = String(format: "%06d", pago.id ?? 0)
+        let formaPagoDescripcion = formasPago.first(where: { $0.id == formaPagoSeleccionada })?.descripcion ?? "N/D"
+        
+        let data = ComprobanteData(
+            organizacionNombre: "Cobros App",
+            folio: folio,
+            fechaPago: Date(),
+            clienteNombre: "\(cliente?.nombre ?? "") \(cliente?.appaterno ?? "") \(cliente?.apmaterno ?? "")",
+            numeroCuota: pago.numeroCuota ?? 0,
+            totalCuotas: pago.prestamos?.cuotas ?? 0,
+            montoPagado: Double(montoIngresado) ?? 0,
+            abonoCapital: abonoCapital,
+            pagoIntereses: pagoIntereses,
+            recargos: recargos,
+            formaPago: formaPagoDescripcion,
+            saldoRestante: saldoRestante
+        )
+        
+        comprobanteURL = ComprobanteService.generarPDF(data: data)
     }
 }

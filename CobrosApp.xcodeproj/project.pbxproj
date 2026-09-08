@@ -44,6 +44,7 @@
 				Models/RutaAnidada.swift,
 				Models/Usuario.swift,
 				Services/AuthService.swift,
+				Services/ComprobanteService.swift,
 				Services/OrganizacionesService.swift,
 				Services/PagoService.swift,
 				Services/PrestamoService.swift,
