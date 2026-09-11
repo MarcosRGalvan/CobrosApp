@@ -126,4 +126,38 @@ class CajaService {
         let totalEfectivo = response.map { $0.montoPagado }.reduce(0, +)
         return cajaInicial + totalEfectivo
     }
+    
+    func fetchCajasEnRangoBulk(rutaIds: [UUID], desde: Date, hasta: Date) async throws -> [UUID: Double] {
+        guard !rutaIds.isEmpty else { return [:] }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.timeZone = TimeZone.current
+        let desdeStr = dateFormatter.string(from: desde)
+        let hastaStr = dateFormatter.string(from: hasta)
+        
+        struct CajaRow: Decodable {
+            let rutaId: UUID
+            let montoInicial: Double
+            enum CodingKeys: String, CodingKey {
+                case rutaId = "ruta_id"
+                case montoInicial = "monto_inicial"
+            }
+        }
+        
+        let response: [CajaRow] = try await supabase
+            .from("cajas_ruta")
+            .select("ruta_id, monto_inicial")
+            .in("ruta_id", values: rutaIds.map { $0.uuidString })
+            .gte("fecha", value: desdeStr)
+            .lte("fecha", value: hastaStr)
+            .execute()
+            .value
+        
+        var resultado: [UUID: Double] = [:]
+        for row in response {
+            resultado[row.rutaId, default: 0] += row.montoInicial
+        }
+        return resultado
+    }
 }

@@ -12,11 +12,10 @@ struct InformeRuta: Identifiable {
     let nombreRuta: String
     let cobradorNombre: String?
     let totalClientes: Int
-    let totalPrestado: Double
+    let cobrosRealizados: Int
+    let cobrosNoRealizados: Int
     let totalRecaudado: Double
-    let efectividad: Double
-    let clientesConIncumplimientos: Int
-    let scorePromedio: Double
+    let cajaInicialTotal: Double
 }
 
 enum RangoInforme: String, CaseIterable, Identifiable {

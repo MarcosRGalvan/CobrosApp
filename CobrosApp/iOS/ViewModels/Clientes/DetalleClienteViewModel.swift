@@ -34,11 +34,11 @@ class DetalleClienteViewModel {
         guard let clienteId = cliente.id else { return }
         isLoading = true
         do {
-            async let incumplimientosTask = pagoService.fetchIncumplimientosBulk(clienteId: clienteId)
+            async let incumplimientosTask = pagoService.fetchIncumplimientosBulk(clienteIds: [clienteId])
             async let scoresTask = pagoService.fetchScoresClientes(clienteIds: [clienteId])
             let (incumplimientosResult, scoresResult) = try await (incumplimientosTask, scoresTask)
             
-            incumplimientos = incumplimientosResult
+            incumplimientos = (incumplimientosResult[clienteId] ?? 0)
             score = scoresResult[clienteId] ?? 0
         } catch {
             errorMessage = "No se pudieron cargar las estadísticas: \(error.localizedDescription)"

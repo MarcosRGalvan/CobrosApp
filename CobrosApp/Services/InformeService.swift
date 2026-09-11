@@ -29,18 +29,11 @@ class InformeService {
         let desdeStr = isoFormatter.string(from: desde)
         let hastaStr = isoFormatter.string(from: hasta)
         
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        dateFormatter.timeZone = TimeZone.current
-        let desdeDateStr = dateFormatter.string(from: desde)
-        let hastaDateStr = dateFormatter.string(from: hasta)
-        
         // 1. Rutas de la organización, con nombre del cobrador
         struct RutaConCobrador: Decodable {
             let id: UUID
             let nombre: String
             let usuarios: NombreCobrador?
-            
             struct NombreCobrador: Decodable {
                 let nombre: String?
             }
@@ -54,6 +47,7 @@ class InformeService {
             .value
         
         guard !rutas.isEmpty else { return [] }
+        let rutaIds = rutas.map { $0.id }
         
         // 2. Clientes por ruta
         struct ClienteRuta: Decodable {
@@ -76,28 +70,8 @@ class InformeService {
             guard let r = c.rutaId else { return nil }
             return (c.id, r)
         })
-        let allClienteIds = clientes.map { $0.id }
         
-        // 3. Préstamos creados en el rango (para total prestado por ruta)
-        struct PrestamoInfo: Decodable {
-            let montoPrestado: Double
-            let clienteId: Int
-            enum CodingKeys: String, CodingKey {
-                case montoPrestado = "monto_prestado"
-                case clienteId = "cliente_id"
-            }
-        }
-        let prestamos: [PrestamoInfo] = try await supabase
-            .from("prestamos")
-            .select("monto_prestado, cliente_id")
-            .gte("fecha_prestamo", value: desdeDateStr)
-            .lte("fecha_prestamo", value: hastaDateStr)
-            .execute()
-            .value
-        
-        let prestamoPorRuta = Dictionary(grouping: prestamos) { clienteToRuta[$0.clienteId] }
-        
-        // 4. Pagos con vencimiento en el rango (para recaudado + efectividad)
+        // 3. Pagos con vencimiento en el rango
         struct PagoInfo: Decodable {
             let montoPagado: Double
             let estado: String
@@ -123,40 +97,29 @@ class InformeService {
         let pagos = try JSONDecoder().decode([PagoInfo].self, from: pagosResponse.data)
         let pagoPorRuta = Dictionary(grouping: pagos) { clienteToRuta[$0.prestamos?.clienteId ?? -1] }
         
-        // 5. Scores e incumplimientos
-        let pagoService = PagoService()
-        let scores = try await pagoService.fetchScoresClientes(clienteIds: allClienteIds)
-        let incumplimientos = try await pagoService.fetchIncumplimientosBulk(clienteIds: allClienteIds)
+        // 4. Caja inicial sumada en el rango, en bulk
+        let cajaService = CajaService()
+        let cajasPorRuta = try await cajaService.fetchCajasEnRangoBulk(rutaIds: rutaIds, desde: desde, hasta: hasta)
         
-        
-        // 6. Se arma el informe por ruta
+        // 5. Armar el informe por ruta
         var informes: [InformeRuta] = []
         for ruta in rutas {
             let clientesRuta = clientesPorRuta[ruta.id] ?? []
-            let clienteIdsRuta = Set(clientesRuta.map { $0.id })
-            
-            let totalPrestado = (prestamoPorRuta[ruta.id] ?? []).map { $0.montoPrestado }.reduce(0, +)
-            
             let pagosRuta = pagoPorRuta[ruta.id] ?? []
-            let cobrados = pagosRuta.filter { $0.estado == "pagado" }
-            let totalRecaudado = cobrados.map { $0.montoPagado }.reduce(0, +)
-            let efectividad = pagosRuta.isEmpty ? 0 : (Double(cobrados.count) / Double(pagosRuta.count)) * 100
             
-            let clientesConIncumplimientos = clienteIdsRuta.filter { (incumplimientos[$0] ?? 0) > 0 }.count
-            
-            let scoresRuta = clienteIdsRuta.compactMap { scores[$0] }
-            let scoresPromedio = scoresRuta.isEmpty ? 0 : scoresRuta.reduce(0, +) / Double(scoresRuta.count)
+            let realizados = pagosRuta.filter { $0.estado == "pagado" }
+            let noRealizados = pagosRuta.filter { $0.estado != "pagado" }
+            let totalRecaudado = realizados.map { $0.montoPagado }.reduce(0, +)
             
             informes.append(InformeRuta(
                 id: ruta.id,
                 nombreRuta: ruta.nombre,
                 cobradorNombre: ruta.usuarios?.nombre,
                 totalClientes: clientesRuta.count,
-                totalPrestado: totalPrestado,
+                cobrosRealizados: realizados.count,
+                cobrosNoRealizados: noRealizados.count,
                 totalRecaudado: totalRecaudado,
-                efectividad: efectividad,
-                clientesConIncumplimientos: clientesConIncumplimientos,
-                scorePromedio: scoresPromedio
+                cajaInicialTotal: cajasPorRuta[ruta.id] ?? 0
             ))
         }
         

@@ -107,7 +107,7 @@ struct ContentView: View {
                 case .resumenDia:
                     ResumenDiaView()
                 case .informe:
-                    EmptyView()
+                    InformesRutasView()
                 case .rutaDelDia:
                     CobrosDiariosView()
                 case .usuarios:
