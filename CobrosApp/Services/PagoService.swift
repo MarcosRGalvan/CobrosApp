@@ -387,64 +387,70 @@ class PagoService {
         )
     }
 
-    func fetchIncumplimientos(clienteId: Int) async throws -> Int {
-        // Pagos vencidos sin pagar
-        struct PrestamoId: Decodable { let prestamo_id: Int }
-        let prestamoCliente: [PrestamoId] =
-            try await supabase
+    func fetchIncumplimientosBulk(clienteIds: [Int]) async throws -> [Int: Int] {
+        guard !clienteIds.isEmpty else { return [:] }
+        
+        struct PrestamoClienteId: Decodable {
+            let prestamoId: Int
+            let clienteId: Int
+            enum CodingKeys: String, CodingKey {
+                case prestamoId = "prestamo_id"
+                case clienteId = "cliente_id"
+            }
+        }
+        let prestamos: [PrestamoClienteId] = try await supabase
             .from("prestamos")
-            .select("prestamo_id")
-            .eq("cliente_id", value: clienteId)
+            .select("prestamo_id, cliente_id")
+            .in("cliente_id", values: clienteIds)
             .execute()
             .value
-
-        guard !prestamoCliente.isEmpty else { return 0 }
-        let ids = prestamoCliente.map { $0.prestamo_id }
-
-        let hoy = Calendar.current.startOfDay(for: Date())
-        let hoyStr = ISO8601DateFormatter().string(from: hoy)
         
-        let sinPagar =
-            try await supabase
-            .from("pagos")
-            .select("id", head: false, count: .exact)
-            .in("prestamo_id", values: ids)
-            .lt("fecha_vencimiento", value: hoyStr)
-            .is("fecha_pago", value: nil)
-            .execute()
-
-        // Pagos pagados pero tarde
+        guard !prestamos.isEmpty else { return [:] }
+        let prestamoToCliente = Dictionary(uniqueKeysWithValues: prestamos.map { ($0.prestamoId, $0.clienteId) })
+        let allPrestamoIds = prestamos.map { $0.prestamoId }
+        
+        let hoy = Calendar.current.startOfDay(for: Date())
+        
         struct PagoFechas: Decodable {
+            let prestamoId: Int
             let fechaPago: Date?
             let fechaVencimiento: Date?
             enum CodingKeys: String, CodingKey {
+                case prestamoId = "prestamo_id"
                 case fechaPago = "fecha_pago"
                 case fechaVencimiento = "fecha_vencimiento"
             }
         }
-
-        let response =
-            try await supabase
+        
+        let response = try await supabase
             .from("pagos")
-            .select("fecha_pago, fecha_vencimiento")
-            .in("prestamo_id", values: ids)
-            .not("fecha_pago", operator: .is, value: "null")
+            .select("prestamo_id, fecha_pago, fecha_vencimiento")
+            .in("prestamo_id", values: allPrestamoIds)
             .execute()
-
+        
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let pagos = try decoder.decode([PagoFechas].self, from: response.data)
-
-        let tardios = pagos.filter { pago in
-            guard let fechaPago = pago.fechaPago,
-                let fechaVence = pago.fechaVencimiento
-            else { return false }
-            let calendar = Calendar.current
-            return calendar.startOfDay(for: fechaPago)
-                > calendar.startOfDay(for: fechaVence)
-        }.count
-
-        return (sinPagar.count ?? 0) + tardios
+        
+        var resultado: [Int: Int] = [:]
+        let calendar = Calendar.current
+        
+        for pago in pagos {
+            guard let clienteId = prestamoToCliente[pago.prestamoId] else { continue }
+            var esIncumplimiento = false
+            
+            if let fechaVence = pago.fechaVencimiento, pago.fechaPago == nil {
+                if calendar.startOfDay(for: fechaVence) < hoy { esIncumplimiento = true }
+            } else if let fechaPago = pago.fechaPago, let fechaVence = pago.fechaVencimiento {
+                if calendar.startOfDay(for: fechaPago) > calendar.startOfDay(for: fechaVence) { esIncumplimiento = true }
+            }
+            
+            if esIncumplimiento {
+                resultado[clienteId, default: 0] += 1
+            }
+        }
+        
+        return resultado
     }
     
     struct PagoConCliente: Decodable {

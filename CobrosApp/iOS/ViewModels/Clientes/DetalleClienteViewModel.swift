@@ -34,7 +34,7 @@ class DetalleClienteViewModel {
         guard let clienteId = cliente.id else { return }
         isLoading = true
         do {
-            async let incumplimientosTask = pagoService.fetchIncumplimientos(clienteId: clienteId)
+            async let incumplimientosTask = pagoService.fetchIncumplimientosBulk(clienteId: clienteId)
             async let scoresTask = pagoService.fetchScoresClientes(clienteIds: [clienteId])
             let (incumplimientosResult, scoresResult) = try await (incumplimientosTask, scoresTask)
             
