@@ -19,6 +19,13 @@ struct InformesRutasView: View {
         _viewModel = State(initialValue: viewModel)
     }
     
+    private var rangoTexto: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "es_MX")
+        formatter.dateFormat = "d MMM"
+        return "\(formatter.string(from: viewModel.fechaInicio)) - \(formatter.string(from: viewModel.fechaFin))"
+    }
+    
     var body: some View {
         Group {
             if viewModel.isLoading {
@@ -27,6 +34,19 @@ struct InformesRutasView: View {
                 ContentUnavailableView("Sin datos", systemImage: "chart.bar.xaxis", description: Text("No hay información para el rango seleccionado."))
             } else {
                 List {
+                    Section {
+                        HStack {
+                            Image(systemName: "calendar")
+                                .foregroundStyle(.secondary)
+                            Text("\(viewModel.rangoSeleccionado.rawValue) · \(rangoTexto)")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                        }
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
+                    }
+                    
                     ForEach(viewModel.informes) { informe in
                         NavigationLink {
                             DetalleInformeRutaView(informe: informe, fechaInicio: viewModel.fechaInicio, fechaFin: viewModel.fechaFin)
@@ -109,10 +129,6 @@ struct InformeRutaRow: View {
 
                 HStack(spacing: 8) {
                     Label("\(informe.totalClientes) clientes", systemImage: "person.2.fill")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Text(informe.cobradorNombre ?? "Sin cobrador")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
