@@ -78,6 +78,38 @@ struct DetalleRutaView: View {
                             }
                         }
                         
+                        // Seccion caja del dia
+                        Section(header: Text("Caja del dia")) {
+                            if viewModel.cargandoCaja {
+                                ProgressView()
+                            } else {
+                                HStack {
+                                    Text("Caja inicial de hoy")
+                                    Spacer()
+                                    if let caja = viewModel.cajaHoy {
+                                        Text(caja.formatted(.currency(code: "MXN")))
+                                            .bold()
+                                            .foregroundStyle(.green)
+                                    } else {
+                                        Text("Sin asignar")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                
+                                if auth.esAdmin {
+                                    Button {
+                                        viewModel.montoCajaTexto = viewModel.cajaHoy.map { String(format: "%.2f", $0) } ?? ""
+                                        viewModel.mostrarAsignarCaja = true
+                                    } label: {
+                                        Label(
+                                            viewModel.cajaHoy == nil ? "Asignar caja del dia" : "Corregir caja del dia",
+                                            systemImage: "banknote.fill"
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        
                         // Seccion clientes
                         Section(header:
                                     HStack {
@@ -135,12 +167,18 @@ struct DetalleRutaView: View {
         //.scrollContentBackground(.hidden)
         .navigationTitle(viewModel.ruta.nombre)
         .navigationBarTitleDisplayMode(.inline)
-        .task { await viewModel.cargarDatos() }
+        .task {
+            await viewModel.cargarDatos()
+            await viewModel.cargarCajaHoy()
+        }
         .sheet(isPresented: $viewModel.mostrarAsignarCobrador) {
             AsignarCobradorView(viewModel: viewModel)
         }
         .sheet(isPresented: $viewModel.mostrarAsignarClientes) {
             AsignarClientesView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $viewModel.mostrarAsignarCaja) {
+            AsignarCajaView(viewModel: viewModel)
         }
         .alert(
             "Error",

@@ -10,7 +10,7 @@ import SwiftUI
 struct LoginView: View {
     @Environment(AuthViewModel.self) private var auth
     
-    @State private var claveOrg = ""
+    @AppStorage("claveOrgGuardada") private var claveOrg = ""
     @State private var clave = ""
     
     var body: some View {

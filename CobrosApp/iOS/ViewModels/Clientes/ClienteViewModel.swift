@@ -274,7 +274,7 @@ class ClienteViewModel {
 
             return path
         } catch {
-            print("❌ Error vinculando documento: \(error)")
+            // print("❌ Error vinculando documento: \(error)")
             errorMessage = "No se pudo subir el documento de identificación: \(error.localizedDescription)"
             return nil
         }

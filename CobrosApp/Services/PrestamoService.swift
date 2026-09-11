@@ -29,4 +29,44 @@ class PrestamoService {
             .eq("prestamo_id", value: prestamoId)
             .execute()
     }
+    
+    func totalPrestadoHoy() async throws -> Double {
+        let hoy = Calendar.current.startOfDay(for: Date())
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.timeZone = TimeZone.current
+        let hoyStr = dateFormatter.string(from: hoy)
+        
+        struct MontoPrestado: Decodable {
+            let montoPrestado: Double
+            enum CodingKeys: String, CodingKey {
+                case montoPrestado = "monto_prestado"
+            }
+        }
+        
+        let rutaService = RutaService()
+        
+        if let rutaId = try await rutaService.fetchRutaIdDelCobrador() {
+            let response: [MontoPrestado] =
+            try await supabase
+                .from("prestamos")
+                .select("monto_prestado")
+                .eq("fecha_prestamo", value: hoyStr)
+                .execute()
+                .value
+            
+            return response.map { $0.montoPrestado }.reduce(0, +)
+            
+        } else {
+            let response: [MontoPrestado] =
+            try await supabase
+                .from("prestamos")
+                .select("monto_prestado")
+                .eq("fecha_prestamo", value: hoyStr)
+                .execute()
+                .value
+            
+            return response.map { $0.montoPrestado }.reduce(0, +)
+        }
+    }
 }

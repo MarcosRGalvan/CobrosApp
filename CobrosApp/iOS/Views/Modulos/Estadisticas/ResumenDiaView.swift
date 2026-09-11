@@ -68,7 +68,11 @@ struct ResumenDiaView: View {
                             MetricasRow(titulo: "Cobros Realizados", valor: "\(resumen.cobrosRealizados)", icono: "checkmark.circle.fill", color: .green)
                             MetricasRow(titulo: "Cobros Pendientes", valor: "\(resumen.cobrosPendientes)", icono: "clock.fill", color: .orange)
                             MetricasRow(titulo: "Sin pagar", valor: "\(resumen.cobrosSinPagar)", icono: "xmark.circle.fill", color: .red)
+                            if let caja = resumen.cajaInicial {
+                                MetricasRow(titulo: "Caja Inicial", valor: caja.formatted(.currency(code: "MXN")), icono: "tray.fill", color: .teal)
+                            }
                             MetricasRow(titulo: "Total Recaudado", valor: resumen.totalRecaudado.formatted(.currency(code: "MXN")), icono: "dollarsign.circle.fill", color: .blue)
+                            MetricasRow(titulo: "Total Prestado Hoy", valor: resumen.totalPrestadoHoy.formatted(.currency(code: "MXN")), icono: "banknote.fill", color: .indigo)
                             MetricasRow(titulo: "Total Asignados", valor: "\(resumen.cobrosRealizados + resumen.cobrosSinPagar)", icono: "list.bullet.clipboard.fill", color: .purple)
                         }
                         .padding(.horizontal)
@@ -137,7 +141,9 @@ struct ResumenDiaView: View {
         cobrosPendientes: 4,
         cobrosSinPagar: 3,
         totalRecaudado: 12_500,
-        efectividad: 78
+        efectividad: 78,
+        totalPrestadoHoy: 5000,
+        cajaInicial: 500
     )
     return NavigationStack {
         ResumenDiaView(viewModel: vm)
@@ -152,7 +158,9 @@ struct ResumenDiaView: View {
         cobrosPendientes: 9,
         cobrosSinPagar: 11,
         totalRecaudado: 3_200,
-        efectividad: 35
+        efectividad: 35,
+        totalPrestadoHoy: 560,
+        cajaInicial: 500
     )
     return NavigationStack {
         ResumenDiaView(viewModel: vm)

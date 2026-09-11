@@ -21,9 +21,16 @@ class DetalleRutaViewModel {
     var mostrarAsignarCobrador = false
     var mostrarAsignarClientes = false
     var mostrarConfirmacionMover: (cliente: Cliente, rutaDestino: Ruta)? = nil
+    
+    // Caja del dia
+    var cajaHoy: Double?
+    var cargandoCaja = false
+    var mostrarAsignarCaja = false
+    var montoCajaTexto: String = ""
 
     private let rutaService = RutaService()
     private let authService = AuthService()
+    private let cajaService = CajaService()
 
     init(ruta: Ruta) {
         self.ruta = ruta
@@ -46,6 +53,31 @@ class DetalleRutaViewModel {
             errorMessage = "Error cargando datos: \(error.localizedDescription)"
         }
         isLoading = false
+    }
+    
+    func cargarCajaHoy() async {
+        cargandoCaja = true
+        do {
+            cajaHoy = try await cajaService.fetchCajaHoy(rutaId: ruta.id)
+        } catch {
+            errorMessage = "No se pudo cargar la caja del dia: \(error.localizedDescription)"
+        }
+        cargandoCaja = false
+    }
+    
+    func guardarCaja() async {
+        guard let monto = Double(montoCajaTexto), monto >= 0 else {
+            errorMessage = "Inresa un monto válido"
+            return
+        }
+        
+        do {
+            try await cajaService.asignarCaja(rutaId: ruta.id, monto: monto, organizacionId: ruta.organizacionId)
+            cajaHoy = monto
+            mostrarAsignarCaja = false
+        } catch {
+            errorMessage = "No se pudo guardar la caja: \(error.localizedDescription)"
+        }
     }
 
     func asignarCobrador(cobradorId: UUID?) async {

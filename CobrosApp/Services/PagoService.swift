@@ -339,7 +339,7 @@ class PagoService {
 
             let ids = prestamos.map { $0.prestamo_id }
             guard !ids.isEmpty else {
-                return ResumenDia(cobrosRealizados: 0, cobrosPendientes: 0, cobrosSinPagar: 0, totalRecaudado: 0, efectividad: 0)
+                return ResumenDia(cobrosRealizados: 0, cobrosPendientes: 0, cobrosSinPagar: 0, totalRecaudado: 0, efectividad: 0, totalPrestadoHoy: 0, cajaInicial: nil)
             }
 
             let response =
@@ -381,7 +381,9 @@ class PagoService {
             cobrosPendientes: pendientes.count,
             cobrosSinPagar: sinPagar.count,
             totalRecaudado: totalRecaudado,
-            efectividad: efectividad
+            efectividad: efectividad,
+            totalPrestadoHoy: 0,
+            cajaInicial: nil
         )
     }
 
@@ -479,7 +481,7 @@ class PagoService {
             .lt("fecha_vencimiento", value: hastaHoy)
             .execute()
         
-        print("📦 Raw response scores: \(String(data: response.data, encoding: .utf8) ?? "nil")")
+        // print("📦 Raw response scores: \(String(data: response.data, encoding: .utf8) ?? "nil")")
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601

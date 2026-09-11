@@ -14,4 +14,6 @@ struct ResumenDia {
     let cobrosSinPagar: Int
     let totalRecaudado: Double
     let efectividad: Double
+    let totalPrestadoHoy: Double
+    let cajaInicial: Double?
 }
